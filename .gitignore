@@ -40,3 +40,4 @@ __screenshots__/
 
 node_modules
 .env
+dist
