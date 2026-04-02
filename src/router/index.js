@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router"
 
 import Login from "../views/LoginView.vue"
 import Signup from "../views/SignupView.vue"
+import test from "../views/TestView.vue"
 import DocumentList from "../components/DocumentList.vue"
 import DocumentDetail from "../components/DocumentDetail.vue"
 import Upload from "../components/Upload.vue"
@@ -9,15 +10,23 @@ import Upload from "../components/Upload.vue"
 const routes = [
   {
     path: "/",
-    component: DocumentList
+    redirect: "/home"
+  },
+  {
+    path: "/home",
+    component: () => import("@/views/HomeView.vue"),
   },
   {
     path: "/login",
     component: Login
   },
   {
-    path: "/documents/:id",
+    path: "/docdetail",
     component: DocumentDetail
+  },
+  {
+    path: "/doclist",
+    component: DocumentList
   },
   {
     path: "/upload",
@@ -26,6 +35,10 @@ const routes = [
   {
     path: "/signup",
     component: Signup
+  },
+  {
+    path: "/test",
+    component: test
   }
 ]
 

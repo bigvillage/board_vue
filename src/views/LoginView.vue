@@ -17,7 +17,10 @@
           <input type="password" id="password" v-model="password" placeholder="비밀번호를 입력하세요" required />
         </div>
 
-        <button type="submit" class="login-btn">로그인</button>
+        <button type="submit" class="login-btn" :disabled="authStore.loading">
+          <span v-if="authStore.loading">로그인 중...</span>
+          <span v-else>로그인</span>
+        </button>
       </form>
 
       <div class="login-footer">
@@ -31,24 +34,40 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth' // 1. 스토어 가져오기 필수!
 
 const email = ref('')
 const password = ref('')
 const router = useRouter()
+const authStore = useAuthStore() // 2. 스토어 인스턴스 생성 필수!
 
-const handleLogin = () => {
-  // 실제 로그인 로직 (API 호출 등)이 들어갈 자리입니다.
-  console.log('Login attempt:', email.value)
-  // 로그인 성공 시 대시보드로 이동 예시
-  router.push('/')
+const handleLogin = async () => {
+  // 3. 실제 로그인 요청 실행
+  const result = await authStore.login({
+    email: email.value,
+    password: password.value
+  })
+
+  if (result.success) {
+    alert('로그인 성공!')
+    router.push('/')
+  } else {
+    // 서버에서 보내주는 "가입되지 않은 이메일입니다" 등의 메시지가 뜹니다.
+    alert(result.message)
+  }
 }
 
-// 회원가입 페이지로 이동하는 함수 추가
 const goToSignup = () => {
-  router.push('/signup') // router/index.js에 설정된 path를 넣으세요
+  router.push('/signup')
 }
 </script>
 
 <style scoped>
 @import '@/assets/auth.css';
+
+/* 💡 버튼이 비활성화(로딩 중)일 때 스타일 추가 */
+.login-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
 </style>

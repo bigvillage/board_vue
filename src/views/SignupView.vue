@@ -1,40 +1,38 @@
 <template>
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <div class="auth-header">
+    <div class="signup-container">
+        <div class="signup-card">
+            <div class="signup-header">
                 <h2>회원가입</h2>
                 <p>DocSearch의 새로운 회원이 되어보세요.</p>
             </div>
 
-            <form @submit.prevent="handleSignup" class="auth-form">
+            <form @submit.prevent="handleSignup" class="signup-form">
                 <div class="input-group">
                     <label for="name">이름</label>
-                    <input type="text" id="name" v-model="form.name" placeholder="한글 2~4자 또는 영어 12자 이내" required />
+                    <input type="text" id="name" v-model="form.name" placeholder="..." required />
                 </div>
 
                 <div class="input-group">
                     <label for="email">이메일</label>
-                    <input type="email" id="email" v-model="form.email" placeholder="example@docsearch.com" required />
+                    <input type="email" id="email" v-model="form.email" placeholder="..." required />
                 </div>
 
                 <div class="input-group">
                     <label for="password">비밀번호</label>
-                    <input type="password" id="password" v-model="form.password" placeholder="16자 이하 (특수문자/대문자 가능)"
-                        required />
+                    <input type="password" id="password" v-model="form.password" placeholder="..." required />
                 </div>
 
                 <div class="input-group">
                     <label for="passwordConfirm">비밀번호 확인</label>
-                    <input type="password" id="passwordConfirm" v-model="passwordConfirm" placeholder="비밀번호를 한번 더 입력하세요"
-                        required />
+                    <input type="password" id="passwordConfirm" v-model="passwordConfirm" placeholder="..." required />
                 </div>
 
-                <button type="submit" class="auth-btn" :disabled="authStore.loading">
+                <button type="submit" class="signup-btn" :disabled="authStore.loading">
                     {{ authStore.loading ? '처리 중...' : '가입하기' }}
                 </button>
             </form>
 
-            <div class="auth-footer">
+            <div class="signup-footer">
                 <span>이미 계정이 있으신가요?</span>
                 <router-link to="/login">로그인</router-link>
             </div>
@@ -106,6 +104,8 @@ const handleSignup = async () => {
     if (!validateForm()) return
 
     // Store를 통해 Node 서버로 데이터 전송
+    console.log("{ ...form } ==> ", { ...form });
+    console.log("authStore ==> ", authStore);
     const result = await authStore.signup({ ...form })
 
     if (result.success) {

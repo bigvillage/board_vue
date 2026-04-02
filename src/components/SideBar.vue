@@ -8,7 +8,7 @@
         <ul class="menu">
             <li @click="go('/')">🏠 대시보드</li>
             <li @click="go('/search')">🔎 문서 검색</li>
-            <li @click="go('/docs')">📄 문서 관리</li>
+            <li @click="go('/doclist')">📄 문서 관리</li>
             <li @click="go('/favorites')">⭐ 즐겨찾기</li>
             <li @click="go('/settings')">⚙ 설정</li>
         </ul>
