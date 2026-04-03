@@ -6,21 +6,41 @@
         <p class="subtitle">총 {{ documents.length }}개의 문서가 검색되었습니다.</p>
       </div>
 
-      <router-link to="/upload">
-        <el-button type="primary" size="large" class="upload-btn">
-          <el-icon style="margin-right: 5px;">
-            <Plus />
-          </el-icon> 새 문서 업로드
-        </el-button>
-      </router-link>
+      <div class="action-group">
+        <el-button-group class="view-toggle">
+          <el-button :type="viewMode === 'grid' ? 'primary' : ''" @click="viewMode = 'grid'">
+            <el-icon>
+              <Grid />
+            </el-icon>
+          </el-button>
+          <el-button :type="viewMode === 'list' ? 'primary' : ''" @click="viewMode = 'list'">
+            <el-icon>
+              <List />
+            </el-icon>
+          </el-button>
+        </el-button-group>
+
+        <router-link to="/upload">
+          <el-button type="primary" size="large" class="upload-btn">
+            <el-icon style="margin-right: 5px;">
+              <Plus />
+            </el-icon> 새 문서 업로드
+          </el-button>
+        </router-link>
+      </div>
     </div>
 
     <div class="search-section">
       <SearchBar />
     </div>
 
-    <div class="document-list">
-      <DocumentCard v-for="doc in documents" :key="doc.id" :document="doc" />
+    <div :class="viewMode === 'grid' ? 'document-grid' : 'document-list'">
+      <template v-if="viewMode === 'grid'">
+        <DocumentCard v-for="doc in documents" :key="'grid-' + doc.id" :document="doc" />
+      </template>
+      <template v-else>
+        <DocumentListItem v-for="doc in documents" :key="'list-' + doc.id" :document="doc" />
+      </template>
     </div>
 
     <div v-if="documents.length === 0" class="empty-state">
@@ -31,10 +51,13 @@
 
 <script setup>
 import { ref } from 'vue'
+import { Grid, List, Plus, MoreFilled } from '@element-plus/icons-vue'
 import SearchBar from "../components/SearchBar.vue"
 import DocumentCard from "../components/DocumentCard.vue"
+import DocumentListItem from "../components/DocumentListItem.vue" // 새로 만든 것
 
-// 샘플 데이터 (나중에 API 연동 시 이 부분을 fetch 데이터로 교체합니다)
+const viewMode = ref('grid') // 'grid' 또는 'list'
+
 const documents = ref([
   { id: 1, title: '2024년 프로젝트 기획서', author: '김철수', date: '2024-03-20', type: 'PDF' },
   { id: 2, title: '디자인 가이드라인_최종', author: '이영희', date: '2024-03-21', type: 'DOCX' },
@@ -42,27 +65,42 @@ const documents = ref([
   { id: 4, title: '연간 매출 보고서', author: '최팀장', date: '2024-03-15', type: 'XLSX' },
   { id: 5, title: '팀 회의록 (3월 4주차)', author: '정대리', date: '2024-03-25', type: 'DOCX' },
   { id: 6, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
+  { id: 7, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
+  { id: 8, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
+  { id: 9, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
+  { id: 10, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
+  { id: 11, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
+  { id: 12, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
+  { id: 13, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
+  { id: 14, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
+  { id: 15, title: '클라우드 서비스 계약서', author: '법무팀', date: '2024-03-10', type: 'PDF' },
 ])
 </script>
 
 <style scoped>
+/* 1. 전체 레이아웃 컨테이너 */
 .page-container {
   width: 100%;
   min-height: 100vh;
-  padding: 40px;
+  padding: 30px 40px;
+  /* 상하 30px, 좌우 40px로 적당한 긴장감 유지 */
   box-sizing: border-box;
   background-color: #f8f9fa;
+  /* 부드러운 연회색 배경 */
 }
 
+/* 2. 헤더 섹션 (제목 + 버튼들) */
 .header-section {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 40px;
+  align-items: center;
+  /* 제목과 버튼들의 세로 중앙 정렬 */
+  margin-bottom: 25px;
+  /* 검색바와의 간격 (가깝게 조정) */
 }
 
 .title-group h1 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: #1a1a1a;
   margin: 0;
@@ -71,31 +109,82 @@ const documents = ref([
 
 .subtitle {
   color: #6c757d;
-  margin: 8px 0 0 0;
-  font-size: 1rem;
+  margin: 4px 0 0 0;
+  font-size: 0.9rem;
 }
 
+/* 3. 우측 액션 버튼 그룹 (뷰 전환 + 업로드) */
+.action-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* 버튼들 사이의 좁은 간격 */
+}
+
+/* 뷰 전환 버튼 그룹 스타일 */
+.view-toggle :deep(.el-button) {
+  padding: 8px 12px;
+}
+
+/* 4. 검색 섹션 */
 .search-section {
-  margin-bottom: 40px;
+  width: 100%;
+  margin-bottom: 30px;
+  /* 검색바와 리스트 사이의 간격 */
+}
+
+/* 5. 문서 리스트 레이아웃 (그리드/리스트 공통) */
+.document-container {
   width: 100%;
 }
 
-.document-list {
+/* 그리드(카드) 모드일 때 */
+.document-grid {
   display: grid;
-  /* 카드 너비를 최소 320px로 설정하고 남는 공간을 꽉 채움 */
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  /* 카드 사이의 촘촘한 간격 */
 }
 
-.empty-state {
-  margin-top: 100px;
+/* 리스트 모드일 때 */
+.document-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* 리스트 아이템 사이의 좁은 간격 */
 }
 
-/* Element Plus 버튼을 썼을 경우의 스타일링 */
+/* 6. 컴포넌트 내부 요소 스타일 보정 */
 .upload-btn {
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 700;
-  padding: 25px 30px;
-  font-size: 1rem;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  height: auto;
+  /* Element Plus 기본 높이 무시 */
+}
+
+/* 비어있을 때의 상태 */
+.empty-state {
+  margin-top: 50px;
+  text-align: center;
+}
+
+/* 반응형 대응 (모바일) */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 20px;
+  }
+
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .action-group {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 </style>
