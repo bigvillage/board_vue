@@ -10,6 +10,20 @@ import router from './router'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 
+// 아래 스타일을 추가하여 브라우저 기본 여백을 0으로 만듭니다.
+const style = document.createElement('style')
+style.innerHTML = `
+  body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* 가로 스크롤 방지 */
+  }
+  #app {
+    font-family: 'Inter', sans-serif; /* 폰트 일관성 */
+  }
+`
+document.head.appendChild(style)
+
 const app = createApp(App)
 
 app.use(createPinia())

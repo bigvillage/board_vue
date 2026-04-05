@@ -1,22 +1,47 @@
 <template>
-  <Sidebar />
+  <div class="app-layout">
+    <Sidebar />
 
-  <div class="main">
-    <router-view />
+    <div class="main-container">
+      <HomeHeader />
+
+      <div class="page-content">
+        <router-view />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import Sidebar from './components/SideBar.vue'
+import HomeHeader from './components/home/HomeHeader.vue'
 </script>
 
 <style>
-.main {
-  margin-left: 230px;
-  /* padding: 30px;  <-- 이 부분을 제거하거나, 개별 페이지(대시보드 등) 내부로 옮기는 것이 좋습니다. */
+/* 브라우저 기본 여백 제거 및 폰트 설정 */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+}
+
+.app-layout {
+  display: flex;
   min-height: 100vh;
-  /* 전체 높이를 확보하세요 */
+}
+
+.main-container {
+  flex: 1;
+  margin-left: 230px;
+  /* 사이드바 고정 너비 */
   background-color: #f3f4f6;
-  /* 회색 배경을 아예 여기서 지정하면 더 안전합니다. */
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  /* 콘텐츠가 길어질 경우 내부 스크롤 */
 }
 </style>
