@@ -31,7 +31,8 @@
         </el-form-item>
 
         <el-form-item label="파일 첨부">
-          <el-upload class="upload-dragger" drag action="#" multiple :auto-upload="false">
+          <el-upload class="upload-dragger" drag action="#" multiple :auto-upload="false" :on-change="handleChange"
+            :on-remove="handleRemove" :file-list="fileList">
             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
             <div class="el-upload__text">
               파일을 이 곳으로 드래그하거나 <em>클릭하여 업로드</em>
@@ -56,9 +57,17 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { ArrowLeft, UploadFilled, PriceTag } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElLoading } from 'element-plus'
+import { useUploadStore } from '@/stores/upload'
+import { useRouter } from 'vue-router'
+
+const uploadStore = useUploadStore()
+const router = useRouter()
+
+// 🔴 파일을 담을 반응형 변수 (컴포넌트 ref 대신 직접 관리)
+const fileList = ref([])
 
 const form = reactive({
   title: '',
@@ -66,13 +75,64 @@ const form = reactive({
   tags: ''
 })
 
-const handleSave = () => {
+// 파일이 추가되거나 변경될 때 호출
+const handleChange = (file, uploadFiles) => {
+  fileList.value = uploadFiles
+}
+
+// 파일이 삭제될 때 호출
+const handleRemove = (file, uploadFiles) => {
+  fileList.value = uploadFiles
+}
+
+const handleSave = async () => {
+  // 1. 필수값 체크
   if (!form.title) {
     ElMessage.warning('제목은 필수 입력 사항입니다.')
     return
   }
-  ElMessage.success('문서가 성공적으로 저장되었습니다!')
-  // 실제 저장 로직은 여기에 구현하세요.
+
+  // 2. 파일 존재 여부 체크 (이제 fileList.value를 직접 봅니다)
+  if (fileList.value.length === 0) {
+    ElMessage.warning('최소 하나 이상의 파일을 첨부해 주세요.')
+    return
+  }
+
+  const loading = ElLoading.service({
+    lock: true,
+    text: '문서를 서버로 전송 중입니다...',
+    background: 'rgba(255, 255, 255, 0.7)',
+  })
+
+  try {
+    // 3. FormData 생성
+    const formData = new FormData()
+    formData.append('title', form.title)
+    formData.append('content', form.content)
+
+    const tagArray = form.tags.split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag !== '')
+    formData.append('tags', JSON.stringify(tagArray))
+
+    // 4. 파일들 추가
+    fileList.value.forEach(file => {
+      // file.raw가 실제 File 객체입니다.
+      formData.append('files', file.raw)
+    })
+
+    // 5. 서버 전송
+    await uploadStore.uploadDocument(formData)
+
+    ElMessage.success('문서가 성공적으로 저장되었습니다!')
+    router.push('/board')
+
+  } catch (error) {
+    console.error('Upload Error:', error)
+    ElMessage.error('저장 중 오류가 발생했습니다.')
+  } finally {
+    loading.close()
+  }
 }
 </script>
 
@@ -103,7 +163,6 @@ const handleSave = () => {
   font-size: 1rem;
 }
 
-/* 카드 및 폼 스타일 */
 .upload-card {
   border-radius: 16px;
   border: 1px solid #e0e0e0;
@@ -116,7 +175,6 @@ const handleSave = () => {
   padding-bottom: 8px;
 }
 
-/* --- 드래그 업로드 영역 너비 100% 보정 --- */
 .upload-dragger {
   width: 100%;
 }
@@ -138,7 +196,6 @@ const handleSave = () => {
   background-color: #f5faff;
 }
 
-/* 하단 버튼 영역 */
 .form-actions {
   display: flex;
   justify-content: flex-end;
