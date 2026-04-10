@@ -50,48 +50,29 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Grid, List, Plus, MoreFilled } from '@element-plus/icons-vue'
+import { ref, onMounted } from 'vue'
+import { useListStore } from '@/stores/list'
+import { storeToRefs } from 'pinia'
+
+import { Grid, List, Plus } from '@element-plus/icons-vue'
 import SearchBar from "../components/SearchBar.vue"
 import DocumentCard from "../components/DocumentCard.vue"
-import DocumentListItem from "../components/DocumentListItem.vue" // 새로 만든 것
+import DocumentListItem from "../components/DocumentListItem.vue"
 
-const viewMode = ref('grid') // 'grid' 또는 'list'
+// 뷰 모드
+const viewMode = ref('grid')
 
-const documents = ref([
-  {
-    id: 1,
-    title: '2024년 프로젝트 기획서',
-    author: '김철수',
-    date: '2024-03-20',
-    type: 'PDF',
-    content: '이 기획서는 2024년 신규 프로젝트의 전반적인 방향성과 예산 계획을 담고 있습니다. 상세 로드맵은 첨부파일을 확인해 주세요.',
-    attachments: [
-      { name: '기획서_상세_부록.pdf', size: '1.2MB', ext: 'pdf' },
-      { name: '예산_계획안.xlsx', size: '450KB', ext: 'xlsx' }
-    ]
-  },
-  {
-    id: 2,
-    title: '디자인 가이드라인_최종',
-    author: '이영희',
-    date: '2024-03-21',
-    type: 'DOCX',
-    content: '브랜드 리뉴얼에 따른 새로운 컬러 팔레트와 타이포그래피 규칙입니다.',
-    attachments: [
-      { name: 'CI_BI_가이드.docx', size: '8.5MB', ext: 'docx' }
-    ]
-  },
-  {
-    id: 3,
-    title: '서버 아키텍처 다이어그램',
-    author: '박지민',
-    date: '2024-03-22',
-    type: 'PNG',
-    content: '메인 서버와 DB 클러스터링 구조도입니다.',
-    attachments: [] // 첨부파일이 없는 경우
-  },
-])
+// 🔥 store 연결
+const listStore = useListStore()
+
+// 🔥 핵심: store state를 반응형으로 가져오기
+const { documents } = storeToRefs(listStore)
+console.log("documents ==> ", documents.value);
+
+// 🔥 마운트 시 데이터 불러오기
+onMounted(() => {
+  listStore.fetchDocuments()
+})
 </script>
 
 <style scoped>

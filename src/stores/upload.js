@@ -5,6 +5,7 @@ export const useUploadStore = defineStore('upload', {
   actions: {
     async uploadDocument(formData) {
       try {
+        console.log("formData ==> ", formData);
         const response = await axios.post('http://localhost:3000/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data' // 파일 전송 시 필수 설정
