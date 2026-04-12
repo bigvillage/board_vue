@@ -48,8 +48,7 @@
                                 <span class="file-name">{{ file.name }}</span>
                                 <span class="file-size">({{ file.size }})</span>
                             </div>
-                            <el-button type="primary" link icon="Download"
-                                @click.stop="downloadFile(file)">다운로드</el-button>
+                            <el-button type="primary" link :icon="Download" @click="downloadFile(file)">다운로드</el-button>
                         </div>
                     </div>
                 </div>
@@ -79,12 +78,16 @@ defineProps({
 })
 
 const downloadFile = (file) => {
-    const link = document.createElement('a')
-    link.href = file.url
-    link.download = file.name || 'download'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    window.open(
+        `http://localhost:3000/api/download?url=${encodeURIComponent(file.url)}&name=${file.name}`
+    )
+    // const link = document.createElement('a')
+    // console.log("file.url => ", file.url)
+    // link.href = file.url
+    // link.download = file.name || 'download'
+    // document.body.appendChild(link)
+    // link.click()
+    // document.body.removeChild(link)
 }
 
 const showModal = ref(false)
