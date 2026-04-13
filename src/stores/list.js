@@ -11,7 +11,7 @@ export const useListStore = defineStore('list', {
       try {
         const response = await axios.get('http://localhost:3000/api/list')
 
-        // 🔥 Mongo → Vue 구조 변환
+        // Mongo 데이터 추출
         this.documents = response.data.map(post => ({
           id: post._id,
           title: post.title,
@@ -23,7 +23,7 @@ export const useListStore = defineStore('list', {
           attachments: post.files?.map(file => ({
             name: file.originalName,
             size: (file.size / 1024).toFixed(1) + 'KB',
-            // ext: file.type.split('/')[1],
+            ext: file.originalName?.split('.').pop()?.toLowerCase() || '',
             url: file.fileUrl
           })) || []
         }))
