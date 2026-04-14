@@ -12,11 +12,26 @@
 
             <div class="meta-side">
                 <span class="date">{{ document.date }}</span>
-                <el-button size="small" circle icon="MoreFilled" @click.stop />
+
+                <el-dropdown @command="handleCommand">
+                    <el-button size="small" circle @click.stop>
+                        <el-icon>
+                            <MoreFilled />
+                        </el-icon>
+                    </el-button>
+
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item command="edit">수정</el-dropdown-item>
+                            <el-dropdown-item command="delete" divided>삭제</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
             </div>
         </div>
 
         <DocumentDetail v-model="showModal" :document="document" @download="downloadFile" />
+        <EditList v-model="showEditModal" :document="document" @submit="handleEditSubmit" />
     </div>
 </template>
 
@@ -24,6 +39,7 @@
 import { ref } from 'vue'
 import { MoreFilled, Download } from '@element-plus/icons-vue'
 import DocumentDetail from './DocumentDetail.vue'
+import EditList from './EditList.vue'
 
 defineProps({
     document: {
@@ -48,6 +64,26 @@ const downloadFile = (file) => {
 }
 
 const showModal = ref(false)
+
+const handleCommand = (command) => {
+    if (command === 'edit') {
+        showEditModal.value = true
+        console.log('수정 클릭')
+        // TODO: 수정 모달 열기
+    }
+
+    if (command === 'delete') {
+        console.log('삭제 클릭')
+        // TODO: 삭제 API 호출
+    }
+}
+
+const showEditModal = ref(false)
+
+const handleEditSubmit = async (formData) => {
+    await uploadStore.updateDocument(document.id, formData)
+}
+
 </script>
 
 <style scoped>
