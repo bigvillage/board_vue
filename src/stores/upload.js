@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
+import {ref, computed} from 'vue'
 import axios from 'axios'
 
-export const useUploadStore = defineStore('upload', {
-  actions: {
-    async uploadDocument(formData) {
+export const useUploadStore = defineStore('upload', () => {
+  const uploadDocument = async (formData) => {
       try {
         console.log("formData ==> ", formData);
         const response = await axios.post('http://localhost:3000/upload', formData, {
@@ -17,5 +17,22 @@ export const useUploadStore = defineStore('upload', {
         throw error
       }
     }
+
+  const editDocument = async (id, formData) => {
+    console.log("editDocument 진입")
+    try {
+      console.log("id ==> ", id)
+      console.log("formData ==> ", formData)
+      await axios.put(`http://localhost:3000/api/update/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+    } catch (error) {
+      console.error('수정 에러:', error)
+      throw error
+    }
   }
+
+  return {uploadDocument, editDocument}
 })

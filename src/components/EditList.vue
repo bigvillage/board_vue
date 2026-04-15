@@ -50,12 +50,15 @@
 import { reactive, ref, computed, watch } from 'vue'
 import { UploadFilled, PriceTag } from '@element-plus/icons-vue'
 
+
 const props = defineProps({
     modelValue: Boolean,
     document: Object
 })
 
 const emit = defineEmits(['update:modelValue', 'submit'])
+
+const removedFiles = ref([])
 
 const visible = computed({
     get: () => props.modelValue,
@@ -85,7 +88,8 @@ watch(
 
         fileList.value = doc.attachments?.map(file => ({
             name: file.name,
-            url: file.url
+            url: file.url,
+            fileKey: file.fileKey
         })) || []
     },
     { immediate: true }
@@ -97,6 +101,13 @@ const handleChange = (file, files) => {
 
 const handleRemove = (file, files) => {
     fileList.value = files
+
+    // 🔥 기존 파일이면 삭제 목록에 넣는다
+    if (!file.raw) {
+        removedFiles.value.push({
+            fileKey: file.fileKey
+        })
+    }
 }
 
 const handleSubmit = () => {
@@ -112,6 +123,10 @@ const handleSubmit = () => {
 
     formData.append('tags', JSON.stringify(tagArray))
 
+    // 🔥 삭제된 파일 목록
+    formData.append('removedFiles', JSON.stringify(removedFiles.value))
+
+    // 🔥 새 파일만 추가됨 (file.raw 있는 것만)
     fileList.value.forEach(file => {
         if (file.raw) {
             formData.append('files', file.raw)

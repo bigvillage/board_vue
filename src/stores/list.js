@@ -1,18 +1,15 @@
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 import axios from 'axios'
 
-export const useListStore = defineStore('list', {
-  state: () => ({
-    documents: []
-  }),
-
-  actions: {
-    async fetchDocuments() {
+export const useListStore = defineStore('list', () => {
+  const documents = ref([])
+  const fetchDocuments = async () => {
       try {
         const response = await axios.get('http://localhost:3000/api/list')
 
         // Mongo 데이터 추출
-        this.documents = response.data.map(post => ({
+        documents.value = response.data.map(post => ({
           id: post._id,
           title: post.title,
           author: '익명',
@@ -24,7 +21,8 @@ export const useListStore = defineStore('list', {
             name: file.originalName,
             size: (file.size / 1024).toFixed(1) + 'KB',
             ext: file.originalName?.split('.').pop()?.toLowerCase() || '',
-            url: file.fileUrl
+            url: file.fileUrl,
+            fileKey: file.fileKey
           })) || []
         }))
 
@@ -33,5 +31,9 @@ export const useListStore = defineStore('list', {
         throw error
       }
     }
-  }
+    
+  
+  return { fetchDocuments, documents }
+  
 })
+

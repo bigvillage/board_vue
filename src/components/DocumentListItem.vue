@@ -2,7 +2,7 @@
     <div class="document-item-wrapper">
         <div class="list-item" @click="showModal = true">
             <div class="info-side">
-                <img :src="`/src/assets/icons/icon_${document.attachments[0].ext.toLowerCase()}.png`"
+                <img :src="`/src/assets/icons/icon_${document.attachments[0]?.ext?.toLowerCase()}.png`"
                     class="file-icon" />
                 <div class="text-group">
                     <h3 class="title">{{ document.title }}</h3>
@@ -23,71 +23,90 @@
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item command="edit">수정</el-dropdown-item>
-                            <el-dropdown-item command="delete" divided>삭제</el-dropdown-item>
+                            <el-dropdown-item command="delete" divided>
+                                삭제
+                            </el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
             </div>
         </div>
 
+        <!-- 상세 모달 -->
         <DocumentDetail v-model="showModal" :document="document" @download="downloadFile" />
+
+        <!-- 수정 모달 -->
         <EditList v-model="showEditModal" :document="document" @submit="handleEditSubmit" />
     </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { MoreFilled, Download } from '@element-plus/icons-vue'
+import { MoreFilled } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import DocumentDetail from './DocumentDetail.vue'
 import EditList from './EditList.vue'
+import { useUploadStore } from '@/stores/upload'
+import { useListStore } from '@/stores/list'
 
-defineProps({
+// ✅ props를 변수로 받는다 (핵심)
+const props = defineProps({
     document: {
         type: Object,
         default: () => ({
-            attachments: [] // 기본값 빈 배열
+            attachments: []
         })
     }
 })
 
+const uploadStore = useUploadStore()
+const listStore = useListStore()
+
+// 모달 상태
+const showModal = ref(false)
+const showEditModal = ref(false)
+
+// 다운로드
 const downloadFile = (file) => {
     window.open(
         `http://localhost:3000/api/download?url=${encodeURIComponent(file.url)}&name=${file.name}`
     )
-    // const link = document.createElement('a')
-    // console.log("file.url => ", file.url)
-    // link.href = file.url
-    // link.download = file.name || 'download'
-    // document.body.appendChild(link)
-    // link.click()
-    // document.body.removeChild(link)
 }
 
-const showModal = ref(false)
+// 🔥 수정 submit (핵심)
+const handleEditSubmit = async (formData) => {
+    try {
+        console.log("handleEditSubmit 진입")
 
+        // ✅ props.document 사용
+        await uploadStore.editDocument(props.document.id, formData)
+
+        await listStore.fetchDocuments()
+
+        showEditModal.value = false
+
+        ElMessage.success('수정 완료')
+    } catch (e) {
+        console.error(e)
+        ElMessage.error('수정 실패')
+    }
+}
+
+// 드롭다운 명령 처리
 const handleCommand = (command) => {
     if (command === 'edit') {
         showEditModal.value = true
         console.log('수정 클릭')
-        // TODO: 수정 모달 열기
     }
 
     if (command === 'delete') {
         console.log('삭제 클릭')
-        // TODO: 삭제 API 호출
+        // TODO: delete API 연결
     }
 }
-
-const showEditModal = ref(false)
-
-const handleEditSubmit = async (formData) => {
-    await uploadStore.updateDocument(document.id, formData)
-}
-
 </script>
 
 <style scoped>
-/* --- 리스트 스타일 --- */
 .document-item-wrapper {
     margin-bottom: 12px;
 }
@@ -144,6 +163,4 @@ const handleEditSubmit = async (formData) => {
     font-size: 0.9rem;
     color: #666;
 }
-
-/* --- 모달 디자인 --- */
 </style>
