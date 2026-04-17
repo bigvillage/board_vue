@@ -1,7 +1,7 @@
 <template>
   <div class="card" @click="showModal = true">
     <div class="card-header">
-      <img :src="fileIconUrl" alt="file type icon" class="file-icon" />
+      <img :src="`/src/assets/icons/icon_${document.attachments[0]?.ext?.toLowerCase()}.png`" class="file-icon" />
       <h3>{{ document.title }}</h3>
     </div>
 
@@ -50,18 +50,18 @@ const downloadFile = (file) => {
 }
 
 // 아이콘 처리 (attachments 기준으로 변경 🔥)
-const fileIconUrl = computed(() => {
-  const ext = props.document.attachments?.[0]?.ext?.toLowerCase()
+// const fileIconUrl = computed(() => {
+//   const ext = props.document.attachments?.[0]?.ext?.toLowerCase()
 
-  switch (ext) {
-    case 'pdf': return '/icons/icon_pdf.png'
-    case 'hwp': return '/icons/icon_hwp.png'
-    case 'txt': return '/icons/icon_txt.png'
-    case 'png': return '/icons/icon_png.png'
-    case 'jpg': return '/icons/icon_jpg.png'
-    default: return '/icons/icon_default.png'
-  }
-})
+//   switch (ext) {
+//     case 'pdf': return '/icons/icon_pdf.png'
+//     case 'hwp': return '/icons/icon_hwp.png'
+//     case 'txt': return '/icons/icon_txt.png'
+//     case 'png': return '/icons/icon_png.png'
+//     case 'jpg': return '/icons/icon_jpg.png'
+//     default: return '/icons/icon_default.png'
+//   }
+// })
 </script>
 
 <style scoped>
