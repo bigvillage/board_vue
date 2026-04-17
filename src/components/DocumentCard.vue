@@ -1,15 +1,13 @@
 <template>
-  <div class="card">
+  <div class="card" @click="showModal = true">
     <div class="card-header">
       <img :src="fileIconUrl" alt="file type icon" class="file-icon" />
       <h3>{{ document.title }}</h3>
     </div>
 
-    <el-tooltip class="box-item" effect="light" :content="document.content" placement="top" :show-after="300"
-      raw-content>
+    <el-tooltip effect="light" :content="document.content" placement="top" :show-after="300" raw-content>
       <p class="content-preview">
-        {{ document.content
-        }}contentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontentcontent
+        {{ document.content }}
       </p>
     </el-tooltip>
 
@@ -19,33 +17,48 @@
           {{ tag }}
         </span>
       </div>
-      <span class="views">조회수 {{ document.views }}</span>
+      <span class="views">조회수 {{ document.views || 0 }}</span>
     </div>
   </div>
+
+  <!-- 🔥 상세 모달 -->
+  <DocumentDetail v-model="showModal" :document="document" @download="downloadFile" />
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import DocumentDetail from './DocumentDetail.vue'
 
+// props
 const props = defineProps({
   document: {
     type: Object,
     default: () => ({
-      title: '제목 없음',
-      content: '내용이 없습니다.',
-      extension: 'txt',
-      tags: ['태그'],
-      views: 0
+      attachments: []
     })
   }
 })
 
+// 모달 상태
+const showModal = ref(false)
+
+// 다운로드
+const downloadFile = (file) => {
+  window.open(
+    `http://localhost:3000/api/download?url=${encodeURIComponent(file.url)}&name=${file.name}`
+  )
+}
+
+// 아이콘 처리 (attachments 기준으로 변경 🔥)
 const fileIconUrl = computed(() => {
-  const ext = props.document.extension?.toLowerCase()
+  const ext = props.document.attachments?.[0]?.ext?.toLowerCase()
+
   switch (ext) {
     case 'pdf': return '/icons/icon_pdf.png'
     case 'hwp': return '/icons/icon_hwp.png'
     case 'txt': return '/icons/icon_txt.png'
+    case 'png': return '/icons/icon_png.png'
+    case 'jpg': return '/icons/icon_jpg.png'
     default: return '/icons/icon_default.png'
   }
 })
@@ -58,6 +71,8 @@ const fileIconUrl = computed(() => {
   border-radius: 8px;
   background-color: white;
   transition: all 0.2s;
+  cursor: pointer;
+  /* 🔥 클릭 가능 */
 }
 
 .card:hover {
@@ -84,21 +99,16 @@ const fileIconUrl = computed(() => {
   color: #303133;
 }
 
-/* --- [핵심: 툴팁이 적용될 텍스트 영역] --- */
 .content-preview {
   color: #606266;
   font-size: 0.9rem;
   line-height: 1.5;
   margin: 0 0 10px 0;
-  cursor: pointer;
-  /* 클릭할 수 있는 느낌 부여 */
 
-  /* 2줄 말줄임표 처리 */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .meta {
