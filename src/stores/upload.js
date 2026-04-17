@@ -34,5 +34,9 @@ export const useUploadStore = defineStore('upload', () => {
     }
   }
 
-  return {uploadDocument, editDocument}
+  const deleteDocument = async (id) => {
+    return axios.delete(`http://localhost:3000/api/upload/${id}`)
+  }
+
+  return {uploadDocument, editDocument, deleteDocument}
 })

@@ -43,7 +43,7 @@
 <script setup>
 import { ref } from 'vue'
 import { MoreFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import DocumentDetail from './DocumentDetail.vue'
 import EditList from './EditList.vue'
 import { useUploadStore } from '@/stores/upload'
@@ -93,15 +93,39 @@ const handleEditSubmit = async (formData) => {
 }
 
 // 드롭다운 명령 처리
-const handleCommand = (command) => {
+const handleCommand = async (command) => {
     if (command === 'edit') {
         showEditModal.value = true
         console.log('수정 클릭')
     }
 
     if (command === 'delete') {
-        console.log('삭제 클릭')
-        // TODO: delete API 연결
+        try {
+            await ElMessageBox.confirm(
+                '정말 삭제하시겠습니까?',
+                '삭제 확인',
+                {
+                    confirmButtonText: '삭제',
+                    cancelButtonText: '취소',
+                    type: 'warning',
+                }
+            )
+
+            // 🔥 삭제 API 호출
+            await uploadStore.deleteDocument(props.document.id)
+
+            // 🔥 리스트 갱신
+            await listStore.fetchDocuments()
+
+            ElMessage.success('삭제 완료')
+
+        } catch (e) {
+            // 취소 or 에러
+            if (e !== 'cancel') {
+                console.error(e)
+                ElMessage.error('삭제 실패')
+            }
+        }
     }
 }
 </script>
