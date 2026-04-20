@@ -4,8 +4,20 @@
       <div class="modal-header-top">
         <img :src="`/src/assets/icons/icon_${document.attachments[0].ext.toLowerCase()}.png`"
           class="modal-large-icon" />
+
         <div class="modal-title-group">
-          <h2 class="modal-title">{{ document.title }}</h2>
+          <!-- 🔥 여기만 추가 -->
+          <div class="title-row">
+            <h2 class="modal-title">{{ document.title }}</h2>
+
+            <!-- ⭐ 즐겨찾기 -->
+            <el-button link @click.stop="toggleFavorite">
+              <el-icon size="22">
+                <component :is="isFavorite ? StarFilled : Star" />
+              </el-icon>
+            </el-button>
+          </div>
+
           <div class="modal-meta">
             <span><strong>작성자</strong> {{ document.author }}</span>
             <span class="divider">|</span>
@@ -24,7 +36,9 @@
       </div>
 
       <div v-if="document.attachments?.length" class="attachment-section">
-        <div class="content-label">첨부파일 ({{ document.attachments.length }})</div>
+        <div class="content-label">
+          첨부파일 ({{ document.attachments.length }})
+        </div>
         <div class="attachment-list">
           <div v-for="(file, index) in document.attachments" :key="index" class="attachment-item">
             <div class="file-info">
@@ -50,7 +64,7 @@
 </template>
 
 <script setup>
-import { MoreFilled, Download } from '@element-plus/icons-vue'
+import { MoreFilled, Download, Star, StarFilled } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 
 const props = defineProps({
@@ -58,12 +72,24 @@ const props = defineProps({
   document: Object
 })
 
-const emit = defineEmits(['update:modelValue', 'download'])
+const emit = defineEmits([
+  'update:modelValue',
+  'download',
+  'toggle-favorite' // 🔥 추가
+])
 
 const visible = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val)
 })
+
+// ⭐ 상태
+const isFavorite = computed(() => props.document?.isFavorite || false)
+
+// ⭐ 클릭
+const toggleFavorite = () => {
+  emit('toggle-favorite', props.document)
+}
 
 const close = () => {
   emit('update:modelValue', false)
@@ -82,6 +108,13 @@ const close = () => {
   width: 50px;
   height: 50px;
   object-fit: contain;
+}
+
+/* 🔥 추가 */
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .modal-title {
@@ -122,7 +155,6 @@ const close = () => {
   font-size: 1.1rem;
 }
 
-/* --- 첨부파일 섹션 스타일 --- */
 .attachment-section {
   margin-top: 10px;
 }
