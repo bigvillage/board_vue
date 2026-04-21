@@ -16,6 +16,7 @@ export const useListStore = defineStore('list', () => {
           date: new Date(post.createdAt).toLocaleDateString(),
           type: post.files?.[0]?.type?.split('/')[1]?.toUpperCase() || 'FILE',
           content: post.content,
+          isFavorite: post.isFavorite || false,
 
           attachments: post.files?.map(file => ({
             name: file.originalName,
@@ -31,9 +32,28 @@ export const useListStore = defineStore('list', () => {
         throw error
       }
     }
+
+    const toggleFavorite = async (id, current) => {
+      try {
+        const newValue = !current
+
+        await axios.patch(
+          `http://localhost:3000/api/documents/${id}/favorite`,
+          {
+            isFavorite: newValue
+          }
+        )
+
+        const target = documents.value.find(doc => doc.id === id)
+        if (target) target.isFavorite = newValue
+
+      } catch (e) {
+        console.error('즐겨찾기 변경 실패:', e)
+      }
+    }
     
   
-  return { fetchDocuments, documents }
+  return { fetchDocuments, documents, toggleFavorite }
   
 })
 

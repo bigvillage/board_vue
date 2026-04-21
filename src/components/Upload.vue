@@ -109,6 +109,7 @@ const handleSave = async () => {
     const formData = new FormData()
     formData.append('title', form.title)
     formData.append('content', form.content)
+    formData.append('isFavorite', false)
 
     const tagArray = form.tags.split(',')
       .map(tag => tag.trim())

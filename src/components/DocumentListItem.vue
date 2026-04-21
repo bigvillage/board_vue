@@ -2,8 +2,16 @@
     <div class="document-item-wrapper">
         <div class="list-item" @click="showModal = true">
             <div class="info-side">
+
+                <!-- ⭐ 추가 -->
+                <el-icon class="favorite-icon" :class="{ active: document.isFavorite }"
+                    @click.stop="handleFavoriteClick">
+                    <Star />
+                </el-icon>
+
                 <img :src="`/src/assets/icons/icon_${document.attachments[0]?.ext?.toLowerCase()}.png`"
                     class="file-icon" />
+
                 <div class="text-group">
                     <h3 class="title">{{ document.title }}</h3>
                     <span class="author">{{ document.author }}</span>
@@ -42,14 +50,14 @@
 
 <script setup>
 import { ref } from 'vue'
-import { MoreFilled } from '@element-plus/icons-vue'
+import { MoreFilled, Star } from '@element-plus/icons-vue' // ⭐ 추가
 import { ElMessage, ElMessageBox } from 'element-plus'
 import DocumentDetail from './DocumentDetail.vue'
 import EditList from './EditList.vue'
 import { useUploadStore } from '@/stores/upload'
 import { useListStore } from '@/stores/list'
 
-// ✅ props를 변수로 받는다 (핵심)
+// props
 const props = defineProps({
     document: {
         type: Object,
@@ -73,18 +81,13 @@ const downloadFile = (file) => {
     )
 }
 
-// 🔥 수정 submit (핵심)
+// 수정
 const handleEditSubmit = async (formData) => {
     try {
-        console.log("handleEditSubmit 진입")
-
-        // ✅ props.document 사용
         await uploadStore.editDocument(props.document.id, formData)
-
         await listStore.fetchDocuments()
 
         showEditModal.value = false
-
         ElMessage.success('수정 완료')
     } catch (e) {
         console.error(e)
@@ -92,11 +95,10 @@ const handleEditSubmit = async (formData) => {
     }
 }
 
-// 드롭다운 명령 처리
+// 드롭다운
 const handleCommand = async (command) => {
     if (command === 'edit') {
         showEditModal.value = true
-        console.log('수정 클릭')
     }
 
     if (command === 'delete') {
@@ -111,22 +113,23 @@ const handleCommand = async (command) => {
                 }
             )
 
-            // 🔥 삭제 API 호출
             await uploadStore.deleteDocument(props.document.id)
-
-            // 🔥 리스트 갱신
             await listStore.fetchDocuments()
 
             ElMessage.success('삭제 완료')
 
         } catch (e) {
-            // 취소 or 에러
             if (e !== 'cancel') {
                 console.error(e)
                 ElMessage.error('삭제 실패')
             }
         }
     }
+}
+
+// 즐겨찾기 체크
+const handleFavoriteClick = () => {
+    listStore.toggleFavorite(props.document.id, props.document.isFavorite)
 }
 </script>
 
@@ -159,6 +162,12 @@ const handleCommand = async (command) => {
     gap: 15px;
 }
 
+/* ⭐ 추가 */
+.favorite-icon {
+    font-size: 20px;
+    color: #ccc;
+}
+
 .file-icon {
     width: 32px;
     height: 32px;
@@ -186,5 +195,16 @@ const handleCommand = async (command) => {
 .date {
     font-size: 0.9rem;
     color: #666;
+}
+
+.favorite-icon {
+    font-size: 20px;
+    color: #ccc;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.favorite-icon.active {
+    color: gold;
 }
 </style>
