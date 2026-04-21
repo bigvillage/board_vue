@@ -6,7 +6,7 @@
                 <!-- ⭐ 추가 -->
                 <el-icon class="favorite-icon" :class="{ active: document.isFavorite }"
                     @click.stop="handleFavoriteClick">
-                    <Star />
+                    <component :is="document.isFavorite ? StarFilled : Star" />
                 </el-icon>
 
                 <img :src="`/src/assets/icons/icon_${document.attachments[0]?.ext?.toLowerCase()}.png`"
@@ -50,7 +50,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { MoreFilled, Star } from '@element-plus/icons-vue' // ⭐ 추가
+import { MoreFilled, Star, StarFilled } from '@element-plus/icons-vue' // ⭐ 추가
 import { ElMessage, ElMessageBox } from 'element-plus'
 import DocumentDetail from './DocumentDetail.vue'
 import EditList from './EditList.vue'

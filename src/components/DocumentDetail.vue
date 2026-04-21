@@ -6,16 +6,13 @@
           class="modal-large-icon" />
 
         <div class="modal-title-group">
-          <!-- 🔥 여기만 추가 -->
+          <!-- ⭐ 제목 + 즐겨찾기 -->
           <div class="title-row">
             <h2 class="modal-title">{{ document.title }}</h2>
 
-            <!-- ⭐ 즐겨찾기 -->
-            <el-button link @click.stop="toggleFavorite">
-              <el-icon size="22">
-                <component :is="isFavorite ? StarFilled : Star" />
-              </el-icon>
-            </el-button>
+            <el-icon class="favorite-icon" :class="{ active: document.isFavorite }" @click.stop="handleFavoriteClick">
+              <component :is="document.isFavorite ? StarFilled : Star" />
+            </el-icon>
           </div>
 
           <div class="modal-meta">
@@ -39,6 +36,7 @@
         <div class="content-label">
           첨부파일 ({{ document.attachments.length }})
         </div>
+
         <div class="attachment-list">
           <div v-for="(file, index) in document.attachments" :key="index" class="attachment-item">
             <div class="file-info">
@@ -46,6 +44,7 @@
               <span class="file-name">{{ file.name }}</span>
               <span class="file-size">({{ file.size }})</span>
             </div>
+
             <el-button type="primary" link :icon="Download" @click="$emit('download', file)">
               다운로드
             </el-button>
@@ -64,33 +63,36 @@
 </template>
 
 <script setup>
-import { MoreFilled, Download, Star, StarFilled } from '@element-plus/icons-vue'
 import { computed } from 'vue'
+import { Download, Star, StarFilled } from '@element-plus/icons-vue'
+import { useListStore } from '@/stores/list'
 
+const listStore = useListStore()
+
+// props
 const props = defineProps({
   modelValue: Boolean,
   document: Object
 })
 
+// emit
 const emit = defineEmits([
   'update:modelValue',
   'download',
-  'toggle-favorite' // 🔥 추가
+  'toggle-favorite'
 ])
 
+// dialog state
 const visible = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val)
 })
 
-// ⭐ 상태
-const isFavorite = computed(() => props.document?.isFavorite || false)
-
-// ⭐ 클릭
-const toggleFavorite = () => {
-  emit('toggle-favorite', props.document)
+const handleFavoriteClick = () => {
+  listStore.toggleFavorite(props.document.id, props.document.isFavorite)
 }
 
+// 닫기
 const close = () => {
   emit('update:modelValue', false)
 }
@@ -110,20 +112,41 @@ const close = () => {
   object-fit: contain;
 }
 
-/* 🔥 추가 */
+/* ⭐ 핵심 레이아웃 */
+.modal-title-group {
+  flex: 1;
+}
+
 .title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  width: 100%;
 }
 
+/* 제목 */
 .modal-title {
-  margin: 0 0 8px 0;
+  margin: 0 10px 8px 0;
   font-size: 1.8rem;
   color: #1a1a1a;
   font-weight: 700;
 }
 
+/* ⭐ 별표 (무조건 오른쪽 끝) */
+.favorite-icon {
+  margin-left: auto;
+  padding-right: 20px;
+  /* ⭐ 클릭 영역 유지하면서 살짝 이동 */
+  font-size: 22px;
+  color: #ccc;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.favorite-icon.active {
+  color: gold;
+}
+
+/* 메타 */
 .modal-meta {
   font-size: 1rem;
   color: #666;
@@ -134,6 +157,7 @@ const close = () => {
   color: #eee;
 }
 
+/* 내용 */
 .content-label {
   font-weight: 600;
   margin: 25px 0 12px 0;
@@ -155,6 +179,7 @@ const close = () => {
   font-size: 1.1rem;
 }
 
+/* 첨부파일 */
 .attachment-section {
   margin-top: 10px;
 }

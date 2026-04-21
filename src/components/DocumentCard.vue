@@ -1,16 +1,28 @@
 <template>
   <div class="card" @click="showModal = true">
+
+    <!-- 🔥 헤더 (별 추가) -->
     <div class="card-header">
+
       <img :src="`/src/assets/icons/icon_${document.attachments[0]?.ext?.toLowerCase()}.png`" class="file-icon" />
-      <h3>{{ document.title }}</h3>
+
+      <h3 class="title">{{ document.title }}</h3>
+
+      <!-- ⭐ 즐겨찾기 (우측 상단) -->
+      <el-icon class="favorite-icon" :class="{ active: document.isFavorite }" @click.stop="handleFavoriteClick">
+        <component :is="document.isFavorite ? StarFilled : Star" />
+      </el-icon>
+
     </div>
 
+    <!-- 내용 -->
     <el-tooltip effect="light" :content="document.content" placement="top" :show-after="300" raw-content>
       <p class="content-preview">
         {{ document.content }}
       </p>
     </el-tooltip>
 
+    <!-- 메타 -->
     <div class="meta">
       <div class="tag-group">
         <span v-for="tag in document.tags" :key="tag" class="tag">
@@ -21,15 +33,16 @@
     </div>
   </div>
 
-  <!-- 🔥 상세 모달 -->
+  <!-- 상세 모달 -->
   <DocumentDetail v-model="showModal" :document="document" @download="downloadFile" />
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { Star, StarFilled } from '@element-plus/icons-vue'
+import { useListStore } from '@/stores/list'
 import DocumentDetail from './DocumentDetail.vue'
 
-// props
 const props = defineProps({
   document: {
     type: Object,
@@ -39,29 +52,29 @@ const props = defineProps({
   }
 })
 
-// 모달 상태
+const listStore = useListStore()
+
 const showModal = ref(false)
 
-// 다운로드
+/* ⭐ 즐겨찾기 클릭 */
+const handleFavoriteClick = async () => {
+  const newValue = !props.document.isFavorite
+
+  await listStore.toggleFavorite(
+    props.document.id,
+    props.document.isFavorite
+  )
+
+  // 🔥 UI 즉시 반영
+  props.document.isFavorite = newValue
+}
+
+/* 다운로드 */
 const downloadFile = (file) => {
   window.open(
     `http://localhost:3000/api/download?url=${encodeURIComponent(file.url)}&name=${file.name}`
   )
 }
-
-// 아이콘 처리 (attachments 기준으로 변경 🔥)
-// const fileIconUrl = computed(() => {
-//   const ext = props.document.attachments?.[0]?.ext?.toLowerCase()
-
-//   switch (ext) {
-//     case 'pdf': return '/icons/icon_pdf.png'
-//     case 'hwp': return '/icons/icon_hwp.png'
-//     case 'txt': return '/icons/icon_txt.png'
-//     case 'png': return '/icons/icon_png.png'
-//     case 'jpg': return '/icons/icon_jpg.png'
-//     default: return '/icons/icon_default.png'
-//   }
-// })
 </script>
 
 <style scoped>
@@ -72,7 +85,7 @@ const downloadFile = (file) => {
   background-color: white;
   transition: all 0.2s;
   cursor: pointer;
-  /* 🔥 클릭 가능 */
+  position: relative;
 }
 
 .card:hover {
@@ -80,11 +93,13 @@ const downloadFile = (file) => {
   border-color: #409EFF;
 }
 
+/* 🔥 헤더 */
 .card-header {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
+  position: relative;
 }
 
 .file-icon {
@@ -93,10 +108,23 @@ const downloadFile = (file) => {
   object-fit: contain;
 }
 
-.card-header h3 {
+.title {
   margin: 0;
   font-size: 1.1rem;
   color: #303133;
+}
+
+/* ⭐ 별 (우측 상단) */
+.favorite-icon {
+  margin-left: auto;
+  font-size: 20px;
+  color: #ccc;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.favorite-icon.active {
+  color: gold;
 }
 
 .content-preview {
@@ -115,7 +143,6 @@ const downloadFile = (file) => {
   margin-top: 10px;
   display: flex;
   justify-content: space-between;
-  gap: 10px;
   font-size: 12px;
   color: gray;
 }
