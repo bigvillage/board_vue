@@ -39,6 +39,10 @@ const routes = [
   {
     path: "/test",
     component: test
+  },
+  {
+    path: '/favorites',
+    component: () => import('../components/FavoriteList.vue')
   }
 ]
 
