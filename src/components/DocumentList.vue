@@ -31,7 +31,7 @@
     </div>
 
     <div class="search-section">
-      <SearchBar />
+      <SearchBar @search="handleSearch" />
     </div>
 
     <div :class="viewMode === 'grid' ? 'document-grid' : 'document-list'">
@@ -59,6 +59,9 @@ import SearchBar from "../components/SearchBar.vue"
 import DocumentCard from "../components/DocumentCard.vue"
 import DocumentListItem from "../components/DocumentListItem.vue"
 
+const handleSearch = (keyword) => {
+  listStore.searchDocuments(keyword)
+}
 // 뷰 모드
 const viewMode = ref('grid')
 
