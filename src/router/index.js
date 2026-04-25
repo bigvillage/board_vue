@@ -6,6 +6,7 @@ import test from "../views/TestView.vue"
 import DocumentList from "../components/DocumentList.vue"
 import DocumentDetail from "../components/DocumentDetail.vue"
 import Upload from "../components/Upload.vue"
+import Settings from '../components/SettingsView.vue'
 
 const routes = [
   {
@@ -43,6 +44,10 @@ const routes = [
   {
     path: '/favorites',
     component: () => import('../components/FavoriteList.vue')
+  },
+  {
+    path: '/settings',
+    component: Settings
   }
 ]
 
