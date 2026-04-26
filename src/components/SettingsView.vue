@@ -1,48 +1,76 @@
 <template>
     <div class="settings-container">
-        <h1 class="title">⚙️ 설정</h1>
 
-        <el-card class="setting-card">
-            <template #header>
-                <span>사용자 설정</span>
-            </template>
+        <!-- 🔐 인증 화면 -->
+        <div v-if="!isAuthenticated" class="auth-box">
+            <h2>🔒 재인증</h2>
 
-            <el-form label-width="120px" class="form">
-                <!-- 이름 -->
-                <el-form-item label="이름">
-                    <el-input v-model="form.name" placeholder="이름 입력" />
-                </el-form-item>
+            <el-input v-model="password" type="password" placeholder="비밀번호 입력" show-password
+                style="margin-bottom: 15px;" />
 
-                <!-- 이메일 -->
-                <el-form-item label="이메일">
-                    <el-input v-model="form.email" placeholder="이메일 입력" />
-                </el-form-item>
+            <el-button type="primary" @click="checkAuth">확인</el-button>
+        </div>
 
-                <!-- 다크모드 -->
-                <el-form-item label="다크 모드">
-                    <el-switch v-model="form.darkMode" />
-                </el-form-item>
+        <!-- ⚙️ 설정 화면 -->
+        <div v-else>
+            <h1 class="title">⚙️ 설정</h1>
 
-                <!-- 알림 -->
-                <el-form-item label="알림 받기">
-                    <el-switch v-model="form.notification" />
-                </el-form-item>
+            <el-card class="setting-card">
+                <template #header>
+                    <span>사용자 설정</span>
+                </template>
 
-                <!-- 버튼 -->
-                <el-form-item>
-                    <el-button type="primary" @click="saveSettings">저장</el-button>
-                    <el-button @click="resetSettings">초기화</el-button>
-                </el-form-item>
-            </el-form>
-        </el-card>
+                <el-form label-width="120px" class="form">
+
+                    <el-form-item label="이름">
+                        <el-input v-model="form.name" />
+                    </el-form-item>
+
+                    <el-form-item label="이메일">
+                        <el-input v-model="form.email" />
+                    </el-form-item>
+
+                    <el-form-item label="다크 모드">
+                        <el-switch v-model="form.darkMode" />
+                    </el-form-item>
+
+                    <el-form-item label="알림 받기">
+                        <el-switch v-model="form.notification" />
+                    </el-form-item>
+
+                    <el-form-item>
+                        <el-button type="primary" @click="saveSettings">저장</el-button>
+                        <el-button @click="resetSettings">초기화</el-button>
+                    </el-form-item>
+
+                </el-form>
+            </el-card>
+        </div>
+
     </div>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 
-// 상태
+/* 🔐 인증 상태 */
+const isAuthenticated = ref(false)
+const password = ref('')
+
+/* 👉 임시 비밀번호 (나중에 서버로 바꿔야함) */
+const CORRECT_PASSWORD = '1234'
+
+const checkAuth = () => {
+    if (password.value === CORRECT_PASSWORD) {
+        isAuthenticated.value = true
+        ElMessage.success('인증 성공')
+    } else {
+        ElMessage.error('비밀번호 틀림')
+    }
+}
+
+/* ⚙️ 설정 */
 const form = reactive({
     name: '',
     email: '',
@@ -50,13 +78,11 @@ const form = reactive({
     notification: true
 })
 
-// 저장
 const saveSettings = () => {
     localStorage.setItem('settings', JSON.stringify(form))
-    ElMessage.success('설정이 저장되었습니다')
+    ElMessage.success('설정 저장 완료')
 }
 
-// 초기화
 const resetSettings = () => {
     form.name = ''
     form.email = ''
@@ -65,7 +91,7 @@ const resetSettings = () => {
     ElMessage.success('초기화 완료')
 }
 
-// 로드
+/* 로드 */
 const saved = localStorage.getItem('settings')
 if (saved) {
     Object.assign(form, JSON.parse(saved))
@@ -91,5 +117,12 @@ if (saved) {
 
 .form {
     margin-top: 10px;
+}
+
+/* 🔐 인증 UI */
+.auth-box {
+    max-width: 400px;
+    margin: 100px auto;
+    text-align: center;
 }
 </style>
