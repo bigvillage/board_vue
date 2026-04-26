@@ -24,27 +24,39 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const login = async (payload) => {
-        loading.value = true
-        try {
-            const response = await axios.post('http://localhost:3000/auth/login', payload)
-            if (response.data.success) {
-                user.value = response.data.user
-                return { success: true }
-            } else {
-                return { success: false, message: response.data.message }
-            }
-        } catch (err) {
-            return { success: false, message: '서버 통신 오류' }
-        } finally {
-            loading.value = false
-        }
+      loading.value = true
+      try {
+          const response = await axios.post('http://localhost:3000/auth/login', payload)
+          if (response.data.success) {
+              user.value = response.data.user
+              return { success: true }
+          } else {
+              return { success: false, message: response.data.message }
+          }
+      } catch (err) {
+          return { success: false, message: '서버 통신 오류' }
+      } finally {
+          loading.value = false
+      }
+  }
+
+  const checkPassword = async (payload) => {
+    try {
+      const response = await axios.post('http://localhost:3000/auth/check-password', payload)
+
+      return response.data
+
+    } catch (err) {
+      return { success: false, message: '서버 통신 오류' }
     }
+  }  
     
   return {
     user,
     loading,
     error,
     signup,
-    login
+    login,
+    checkPassword
   }
 })

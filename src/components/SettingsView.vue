@@ -53,20 +53,28 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
+const authStore = useAuthStore()
 
 /* 🔐 인증 상태 */
 const isAuthenticated = ref(false)
 const password = ref('')
 
-/* 👉 임시 비밀번호 (나중에 서버로 바꿔야함) */
 const CORRECT_PASSWORD = '1234'
 
-const checkAuth = () => {
-    if (password.value === CORRECT_PASSWORD) {
-        isAuthenticated.value = true
-        ElMessage.success('인증 성공')
-    } else {
-        ElMessage.error('비밀번호 틀림')
+const checkAuth = async () => {
+    try {
+        const res = await authStore.checkPassword(email, password.value)
+
+        if (res.success) {
+            isAuthenticated.value = true
+            ElMessage.success('인증 성공')
+        } else {
+            ElMessage.error(res.message)
+        }
+
+    } catch (e) {
+        ElMessage.error('서버 오류')
     }
 }
 
