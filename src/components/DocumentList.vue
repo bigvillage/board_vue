@@ -33,27 +33,32 @@
 
     <!-- 검색 + 필터 -->
     <div class="search-section">
-      <div class="search-row">
+      <div class="search-filter-row">
         <SearchBar @search="handleSearch" />
 
-        <!-- 필터 -->
         <div class="filter-box">
-          <el-select v-model="filterType" placeholder="정렬" style="width: 140px">
+          <!-- 정렬 기준 -->
+          <el-select v-model="sortKey" placeholder="정렬" size="large" style="width: 130px">
             <el-option label="제목순" value="title" />
-            <el-option label="최신순" value="date" />
+            <el-option label="날짜순" value="date" />
           </el-select>
 
-          <el-button @click="applyFilter">적용</el-button>
+          <!-- 오름/내림 -->
+          <el-select v-model="sortOrder" size="large" style="width: 120px">
+            <el-option label="오름차순" value="asc" />
+            <el-option label="내림차순" value="desc" />
+          </el-select>
         </div>
       </div>
     </div>
 
+    <!-- 리스트 -->
     <div :class="viewMode === 'grid' ? 'document-grid' : 'document-list'">
       <template v-if="viewMode === 'grid'">
-        <DocumentCard v-for="doc in documents" :key="'grid-' + doc.id" :document="doc" />
+        <DocumentCard v-for="doc in sortedDocuments" :key="'grid-' + doc.id" :document="doc" />
       </template>
       <template v-else>
-        <DocumentListItem v-for="doc in documents" :key="'list-' + doc.id" :document="doc" />
+        <DocumentListItem v-for="doc in sortedDocuments" :key="'list-' + doc.id" :document="doc" />
       </template>
     </div>
 
@@ -64,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useListStore } from '@/stores/list'
 import { storeToRefs } from 'pinia'
 
@@ -75,6 +80,10 @@ import DocumentListItem from "../components/DocumentListItem.vue"
 
 const viewMode = ref('grid')
 
+// 정렬 상태
+const sortKey = ref('date')   // title | date
+const sortOrder = ref('desc') // asc | desc
+
 const listStore = useListStore()
 const { documents } = storeToRefs(listStore)
 
@@ -83,21 +92,23 @@ const handleSearch = (keyword) => {
   listStore.searchDocuments(keyword)
 }
 
-// 필터 상태
-const filterType = ref('')
+// 정렬 로직
+const sortedDocuments = computed(() => {
+  const copied = [...documents.value]
 
-// 필터 적용
-const applyFilter = () => {
-  if (filterType.value === 'title') {
-    documents.value.sort((a, b) => a.title.localeCompare(b.title))
-  }
+  return copied.sort((a, b) => {
+    let result = 0
 
-  if (filterType.value === 'date') {
-    documents.value.sort((a, b) => new Date(b.date) - new Date(a.date))
-  }
-}
+    if (sortKey.value === 'title') {
+      result = a.title.localeCompare(b.title)
+    } else if (sortKey.value === 'date') {
+      result = new Date(a.date) - new Date(b.date)
+    }
 
-// 초기 데이터
+    return sortOrder.value === 'asc' ? result : -result
+  })
+})
+
 onMounted(() => {
   listStore.fetchDocuments()
 })
@@ -122,14 +133,12 @@ onMounted(() => {
 .title-group h1 {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #1a1a1a;
   margin: 0;
 }
 
 .subtitle {
   color: #6c757d;
-  margin: 4px 0 0 0;
-  font-size: 0.9rem;
+  margin-top: 4px;
 }
 
 .action-group {
@@ -138,27 +147,22 @@ onMounted(() => {
   gap: 12px;
 }
 
-.view-toggle :deep(.el-button) {
-  padding: 8px 12px;
-}
-
-/* 핵심 */
 .search-section {
   width: 100%;
   margin-bottom: 30px;
 }
 
-.search-row {
+/* 핵심: 검색 + 필터 한 줄 */
+.search-filter-row {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
-/* 필터 */
+/* 오른쪽 필터 */
 .filter-box {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .document-grid {
@@ -177,34 +181,10 @@ onMounted(() => {
   border-radius: 10px;
   font-weight: 700;
   padding: 12px 20px;
-  font-size: 0.95rem;
-  height: auto;
 }
 
 .empty-state {
   margin-top: 50px;
   text-align: center;
-}
-
-@media (max-width: 768px) {
-  .page-container {
-    padding: 20px;
-  }
-
-  .header-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .action-group {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .search-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
 }
 </style>
