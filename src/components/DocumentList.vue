@@ -3,7 +3,7 @@
     <div class="header-section">
       <div class="title-group">
         <h1>문서 보관함</h1>
-        <p class="subtitle">총 {{ filteredDocuments.length }}개의 문서가 검색되었습니다.</p>
+        <p class="subtitle">총 {{ documents.length }}개의 문서가 검색되었습니다.</p>
       </div>
 
       <div class="action-group">
@@ -31,37 +31,40 @@
       </div>
     </div>
 
-    <!-- 🔥 필터 영역 -->
-    <div class="filter-section">
-      <el-select v-model="filterType" style="width: 150px;">
-        <el-option label="최신순" value="latest" />
-        <el-option label="오래된순" value="oldest" />
-        <el-option label="제목순" value="title" />
-      </el-select>
-    </div>
-
+    <!-- 검색 + 필터 -->
     <div class="search-section">
-      <SearchBar @search="handleSearch" />
+      <div class="search-row">
+        <SearchBar @search="handleSearch" />
+
+        <!-- 필터 -->
+        <div class="filter-box">
+          <el-select v-model="filterType" placeholder="정렬" style="width: 140px">
+            <el-option label="제목순" value="title" />
+            <el-option label="최신순" value="date" />
+          </el-select>
+
+          <el-button @click="applyFilter">적용</el-button>
+        </div>
+      </div>
     </div>
 
     <div :class="viewMode === 'grid' ? 'document-grid' : 'document-list'">
       <template v-if="viewMode === 'grid'">
-        <DocumentCard v-for="doc in filteredDocuments" :key="'grid-' + doc.id" :document="doc" />
+        <DocumentCard v-for="doc in documents" :key="'grid-' + doc.id" :document="doc" />
       </template>
-
       <template v-else>
-        <DocumentListItem v-for="doc in filteredDocuments" :key="'list-' + doc.id" :document="doc" />
+        <DocumentListItem v-for="doc in documents" :key="'list-' + doc.id" :document="doc" />
       </template>
     </div>
 
-    <div v-if="filteredDocuments.length === 0" class="empty-state">
+    <div v-if="documents.length === 0" class="empty-state">
       <el-empty description="검색된 문서가 없습니다." />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useListStore } from '@/stores/list'
 import { storeToRefs } from 'pinia'
 
@@ -70,46 +73,29 @@ import SearchBar from "../components/SearchBar.vue"
 import DocumentCard from "../components/DocumentCard.vue"
 import DocumentListItem from "../components/DocumentListItem.vue"
 
-// 상태
 const viewMode = ref('grid')
-const filterType = ref('latest')
-const keyword = ref('')
 
-// store
 const listStore = useListStore()
 const { documents } = storeToRefs(listStore)
 
 // 검색
-const handleSearch = (k) => {
-  keyword.value = k.toLowerCase()
+const handleSearch = (keyword) => {
+  listStore.searchDocuments(keyword)
 }
 
-// 필터 + 검색 적용
-const filteredDocuments = computed(() => {
-  let result = [...documents.value]
+// 필터 상태
+const filterType = ref('')
 
-  // 검색 필터 (제목 기준)
-  if (keyword.value) {
-    result = result.filter(doc =>
-      doc.title?.toLowerCase().includes(keyword.value)
-    )
-  }
-
-  // 정렬
-  if (filterType.value === 'latest') {
-    result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  }
-
-  if (filterType.value === 'oldest') {
-    result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-  }
-
+// 필터 적용
+const applyFilter = () => {
   if (filterType.value === 'title') {
-    result.sort((a, b) => a.title.localeCompare(b.title))
+    documents.value.sort((a, b) => a.title.localeCompare(b.title))
   }
 
-  return result
-})
+  if (filterType.value === 'date') {
+    documents.value.sort((a, b) => new Date(b.date) - new Date(a.date))
+  }
+}
 
 // 초기 데이터
 onMounted(() => {
@@ -136,23 +122,43 @@ onMounted(() => {
 .title-group h1 {
   font-size: 1.8rem;
   font-weight: 800;
+  color: #1a1a1a;
   margin: 0;
 }
 
 .subtitle {
   color: #6c757d;
-  margin-top: 5px;
+  margin: 4px 0 0 0;
+  font-size: 0.9rem;
 }
 
-/* 필터 영역 */
-.filter-section {
-  margin-bottom: 15px;
+.action-group {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
 }
 
+.view-toggle :deep(.el-button) {
+  padding: 8px 12px;
+}
+
+/* 핵심 */
 .search-section {
-  margin-bottom: 20px;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* 필터 */
+.filter-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .document-grid {
@@ -167,7 +173,38 @@ onMounted(() => {
   gap: 10px;
 }
 
+.upload-btn {
+  border-radius: 10px;
+  font-weight: 700;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  height: auto;
+}
+
 .empty-state {
   margin-top: 50px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 20px;
+  }
+
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .action-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>
