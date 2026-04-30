@@ -50,6 +50,32 @@ export const useAuthStore = defineStore('auth', () => {
       return { success: false, message: '서버 통신 오류' }
     }
   }  
+
+  const verifyPassword = async (password) => {
+    try {
+      const response = await axios.post('http://localhost:3000/auth/check-password', {
+        email: user.value.email,
+        password
+      })
+
+      return response.data
+    } catch (err) {
+      return { success: false, message: '서버 오류' }
+    }
+  }
+
+  const changePassword = async (newPassword) => {
+    try {
+      const response = await axios.post('http://localhost:3000/auth/change-password', {
+        email: user.value.email,
+        newPassword
+      })
+
+      return response.data
+    } catch (err) {
+      return { success: false, message: '서버 오류' }
+    }
+  }
     
   return {
     user,
@@ -57,6 +83,8 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     signup,
     login,
-    checkPassword
+    checkPassword,
+    verifyPassword,
+    changePassword
   }
 })

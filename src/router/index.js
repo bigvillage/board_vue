@@ -7,6 +7,7 @@ import DocumentList from "../components/DocumentList.vue"
 import DocumentDetail from "../components/DocumentDetail.vue"
 import Upload from "../components/Upload.vue"
 import Settings from '../components/SettingsView.vue'
+import MyPage from '../views/MyPageView.vue'
 
 const routes = [
   {
@@ -48,6 +49,10 @@ const routes = [
   {
     path: '/settings',
     component: Settings
+  },
+  {
+    path: '/mypage',
+    component: MyPage
   }
 ]
 
