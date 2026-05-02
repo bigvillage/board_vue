@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import { ref, reactive } from 'vue'
+// axios가 요청 보낼 때 쿠키를 같이 보내게 하는 설정
+axios.defaults.withCredentials = true
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null);
@@ -76,6 +78,23 @@ export const useAuthStore = defineStore('auth', () => {
       return { success: false, message: '서버 오류' }
     }
   }
+
+  const checkAuth = async () => {
+  try {
+    const response = await axios.get('http://localhost:3000/auth/me')
+    
+    if (response.data.success) {
+      user.value = response.data.user
+      return true
+    } else {
+      user.value = null
+      return false
+    }
+  } catch (err) {
+    user.value = null
+    return false
+  }
+}
     
   return {
     user,
@@ -85,6 +104,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     checkPassword,
     verifyPassword,
-    changePassword
+    changePassword,
+    checkAuth
   }
 })

@@ -8,6 +8,8 @@ import DocumentDetail from "../components/DocumentDetail.vue"
 import Upload from "../components/Upload.vue"
 import Settings from '../components/SettingsView.vue'
 import MyPage from '../views/MyPageView.vue'
+import { useAuthStore } from '@/stores/auth'
+
 
 const routes = [
   {
@@ -55,6 +57,23 @@ const routes = [
     component: MyPage
   }
 ]
+
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+
+  // 로그인 필요 없는 페이지
+  const publicPages = ['/login', '/signup']
+  const isPublic = publicPages.includes(to.path)
+
+  // 서버에 로그인 상태 확인 (쿠키 기반)
+  const isLoggedIn = await authStore.checkAuth()
+
+  if (!isPublic && !isLoggedIn) {
+    return next('/login')
+  }
+
+  next()
+})
 
 const router = createRouter({
   history: createWebHistory(),
