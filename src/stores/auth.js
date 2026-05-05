@@ -13,7 +13,6 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     try {
-      // Node.js 서버 주소에 맞게 수정하세요 (예: http://localhost:3000/api/signup)
       const response = await axios.post('http://127.0.0.1:3000/auth/signup', payload)
       user.value = response.data
       return { success: true }
