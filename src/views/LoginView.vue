@@ -1,73 +1,151 @@
 <template>
-  <div class="login-container">
-    <div class="login-card">
-      <div class="login-header">
-        <h2>로그인</h2>
-        <p>DocSearch 서비스 이용을 위해 로그인해주세요.</p>
+  <div class="mypage-container">
+    <h1 class="title">마이페이지</h1>
+
+    <!-- 사용자 정보 -->
+    <el-card class="card">
+      <template #header>
+        <span>계정 정보</span>
+      </template>
+
+      <div class="user-info">
+        <p><strong>이메일:</strong> {{ authStore.user?.email }}</p>
+        <p><strong>이름:</strong> {{ authStore.user?.name }}</p>
+        <p class="pw-info">
+          비밀번호 마지막 변경: {{ passwordAgeText }}
+        </p>
       </div>
 
-      <form @submit.prevent="handleLogin" class="login-form">
-        <div class="input-group">
-          <label for="email">이메일</label>
-          <input type="email" id="email" v-model="email" placeholder="example@docsearch.com" required />
-        </div>
+      <el-button type="primary" @click="showChangeForm = !showChangeForm">
+        비밀번호 변경
+      </el-button>
+    </el-card>
 
-        <div class="input-group">
-          <label for="password">비밀번호</label>
-          <input type="password" id="password" v-model="password" placeholder="비밀번호를 입력하세요" required />
-        </div>
+    <!-- 비밀번호 변경 -->
+    <el-card v-if="showChangeForm" class="card">
+      <template #header>
+        <span>비밀번호 변경</span>
+      </template>
 
-        <button type="submit" class="login-btn" :disabled="authStore.loading">
-          <span v-if="authStore.loading">로그인 중...</span>
-          <span v-else>로그인</span>
-        </button>
-      </form>
+      <el-form label-width="120px">
+        <el-form-item label="현재 비밀번호">
+          <el-input v-model="currentPassword" type="password" show-password />
+        </el-form-item>
 
-      <div class="login-footer">
-        <span>계정이 없으신가요?</span>
-        <a href="#" @click.prevent="goToSignup">회원가입</a>
-      </div>
-    </div>
+        <el-form-item label="새 비밀번호">
+          <el-input v-model="newPassword" type="password" show-password />
+        </el-form-item>
+
+        <el-form-item label="비밀번호 확인">
+          <el-input v-model="confirmPassword" type="password" show-password />
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" @click="changePassword">
+            변경하기
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth' // 1. 스토어 가져오기 필수!
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
 
-const email = ref('')
-const password = ref('')
-const router = useRouter()
-const authStore = useAuthStore() // 2. 스토어 인스턴스 생성 필수!
+const authStore = useAuthStore()
 
-const handleLogin = async () => {
-  // 3. 실제 로그인 요청 실행
-  const result = await authStore.login({
-    email: email.value,
-    password: password.value
-  })
+const showChangeForm = ref(false)
+
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+
+// 🔥 비밀번호 변경일 (임시: localStorage)
+const passwordChangedAt = ref(localStorage.getItem('pw_changed_at') || Date.now())
+
+// 날짜 계산
+const passwordAgeText = computed(() => {
+  const diff = Date.now() - passwordChangedAt.value
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  return `${days}일 전`
+})
+
+// 🔥 페이지 진입 시 로그인 체크
+onMounted(async () => {
+  const result = await authStore.fetchMe()
+
+  if (!result.success) {
+    ElMessage.error('로그인이 필요합니다')
+    window.location.href = '/login'
+  }
+})
+
+// 비밀번호 변경
+const changePassword = async () => {
+  if (!currentPassword.value) {
+    return ElMessage.warning('현재 비밀번호 입력하세요')
+  }
+
+  const verify = await authStore.verifyPassword(currentPassword.value)
+
+  if (!verify.success) {
+    return ElMessage.error('현재 비밀번호가 틀렸습니다')
+  }
+
+  if (!newPassword.value || !confirmPassword.value) {
+    return ElMessage.warning('새 비밀번호 입력하세요')
+  }
+
+  if (newPassword.value !== confirmPassword.value) {
+    return ElMessage.error('비밀번호가 일치하지 않습니다')
+  }
+
+  const result = await authStore.changePassword(newPassword.value)
 
   if (result.success) {
-    alert('로그인 성공!')
-    router.push('/')
-  } else {
-    // 서버에서 보내주는 "가입되지 않은 이메일입니다" 등의 메시지가 뜹니다.
-    alert(result.message)
-  }
-}
+    ElMessage.success('비밀번호 변경 완료')
 
-const goToSignup = () => {
-  router.push('/signup')
+    // 변경일 저장 (임시)
+    passwordChangedAt.value = Date.now()
+    localStorage.setItem('pw_changed_at', passwordChangedAt.value)
+
+    showChangeForm.value = false
+    currentPassword.value = ''
+    newPassword.value = ''
+    confirmPassword.value = ''
+  } else {
+    ElMessage.error(result.message)
+  }
 }
 </script>
 
 <style scoped>
-@import '@/assets/auth.css';
+.mypage-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px;
+}
 
-/* 💡 버튼이 비활성화(로딩 중)일 때 스타일 추가 */
-.login-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+.title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.card {
+  margin-bottom: 20px;
+  border-radius: 12px;
+}
+
+.user-info p {
+  margin: 5px 0;
+}
+
+.pw-info {
+  font-size: 12px;
+  color: gray;
 }
 </style>
