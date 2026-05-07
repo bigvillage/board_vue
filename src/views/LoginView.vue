@@ -129,6 +129,18 @@ const changePassword = async () => {
   padding: 40px;
 }
 
+.mypage-container2 {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
+.mypage-container3 {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
 .title {
   font-size: 1.8rem;
   font-weight: 800;
