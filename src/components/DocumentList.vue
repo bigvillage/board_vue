@@ -77,6 +77,7 @@ import { Grid, List, Plus } from '@element-plus/icons-vue'
 import SearchBar from "../components/SearchBar.vue"
 import DocumentCard from "../components/DocumentCard.vue"
 import DocumentListItem from "../components/DocumentListItem.vue"
+import Pagenation from "../components/Pagenation.vue"
 
 const viewMode = ref('grid')
 
