@@ -3,7 +3,10 @@
     <div class="header-section">
       <div class="title-group">
         <h1>문서 보관함</h1>
-        <p class="subtitle">총 {{ documents.length }}개의 문서가 검색되었습니다.</p>
+
+        <p class="subtitle">
+          총 {{ total }}개의 문서가 검색되었습니다.
+        </p>
       </div>
 
       <div class="action-group">
@@ -13,6 +16,7 @@
               <Grid />
             </el-icon>
           </el-button>
+
           <el-button :type="viewMode === 'list' ? 'primary' : ''" @click="viewMode = 'list'">
             <el-icon>
               <List />
@@ -25,6 +29,7 @@
             <el-icon style="margin-right: 5px;">
               <Plus />
             </el-icon>
+
             새 문서 업로드
           </el-button>
         </router-link>
@@ -37,13 +42,11 @@
         <SearchBar @search="handleSearch" />
 
         <div class="filter-box">
-          <!-- 정렬 기준 -->
           <el-select v-model="sortKey" placeholder="정렬" size="large" style="width: 130px">
             <el-option label="제목순" value="title" />
             <el-option label="날짜순" value="date" />
           </el-select>
 
-          <!-- 오름/내림 -->
           <el-select v-model="sortOrder" size="large" style="width: 120px">
             <el-option label="오름차순" value="asc" />
             <el-option label="내림차순" value="desc" />
@@ -57,11 +60,16 @@
       <template v-if="viewMode === 'grid'">
         <DocumentCard v-for="doc in sortedDocuments" :key="'grid-' + doc.id" :document="doc" />
       </template>
+
       <template v-else>
         <DocumentListItem v-for="doc in sortedDocuments" :key="'list-' + doc.id" :document="doc" />
       </template>
     </div>
 
+    <!-- 페이지네이션 -->
+    <Pagination :total="total" :page-size="pageSize" :current-page="currentPage" @change="changePage" />
+
+    <!-- 빈 상태 -->
     <div v-if="documents.length === 0" class="empty-state">
       <el-empty description="검색된 문서가 없습니다." />
     </div>
@@ -74,26 +82,31 @@ import { useListStore } from '@/stores/list'
 import { storeToRefs } from 'pinia'
 
 import { Grid, List, Plus } from '@element-plus/icons-vue'
+
 import SearchBar from "../components/SearchBar.vue"
 import DocumentCard from "../components/DocumentCard.vue"
 import DocumentListItem from "../components/DocumentListItem.vue"
-import Pagenation from "../components/Pagenation.vue"
+import Pagination from "../components/Pagination.vue"
+
+const listStore = useListStore()
+
+const { documents, total } = storeToRefs(listStore)
 
 const viewMode = ref('grid')
 
-// 정렬 상태
-const sortKey = ref('date')   // title | date
-const sortOrder = ref('desc') // asc | desc
+const sortKey = ref('date')
+const sortOrder = ref('desc')
 
-const listStore = useListStore()
-const { documents } = storeToRefs(listStore)
+const currentPage = ref(1)
+const pageSize = 5
 
 // 검색
-const handleSearch = (keyword) => {
-  listStore.searchDocuments(keyword)
+const handleSearch = async (keyword) => {
+  currentPage.value = 1
+  await listStore.searchDocuments(keyword)
 }
 
-// 정렬 로직
+// 정렬
 const sortedDocuments = computed(() => {
   const copied = [...documents.value]
 
@@ -102,16 +115,26 @@ const sortedDocuments = computed(() => {
 
     if (sortKey.value === 'title') {
       result = a.title.localeCompare(b.title)
-    } else if (sortKey.value === 'date') {
+    }
+
+    if (sortKey.value === 'date') {
       result = new Date(a.date) - new Date(b.date)
     }
 
-    return sortOrder.value === 'asc' ? result : -result
+    return sortOrder.value === 'asc'
+      ? result
+      : -result
   })
 })
 
-onMounted(() => {
-  listStore.fetchDocuments()
+// 페이지 변경
+const changePage = async (page) => {
+  currentPage.value = page
+  await listStore.fetchDocuments(page)
+}
+
+onMounted(async () => {
+  await listStore.fetchDocuments(1)
 })
 </script>
 
@@ -148,19 +171,21 @@ onMounted(() => {
   gap: 12px;
 }
 
+.view-toggle :deep(.el-button) {
+  padding: 8px 12px;
+}
+
 .search-section {
   width: 100%;
   margin-bottom: 30px;
 }
 
-/* 핵심: 검색 + 필터 한 줄 */
 .search-filter-row {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* 오른쪽 필터 */
 .filter-box {
   display: flex;
   gap: 8px;
@@ -187,5 +212,31 @@ onMounted(() => {
 .empty-state {
   margin-top: 50px;
   text-align: center;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 20px;
+  }
+
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .action-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-box {
+    width: 100%;
+  }
 }
 </style>
