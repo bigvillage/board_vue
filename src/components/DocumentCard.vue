@@ -72,7 +72,7 @@ const handleFavoriteClick = async () => {
 /* 다운로드 */
 const downloadFile = (file) => {
   window.open(
-    `http://localhost:3000/api/download?url=${encodeURIComponent(file.url)}&name=${file.name}`
+    `http://localhost:3000/api/documents/list/download?url=${encodeURIComponent(file.url)}&name=${file.name}`
   )
 }
 </script>

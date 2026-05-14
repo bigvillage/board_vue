@@ -1,107 +1,111 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import { ref, reactive } from 'vue'
-// axios가 요청 보낼 때 쿠키를 같이 보내게 하는 설정
+import { ref } from 'vue'
+
+// axios가 요청 보낼 때 쿠키(JWT 등)를 같이 보내게 하는 설정
 axios.defaults.withCredentials = true
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null);
   const loading = ref(false);
   const error = ref(null);
+
+  // 중앙화된 API 기본 URL (필요 시 수정)
+  const API_BASE_URL = 'http://localhost:3000/api/login/auth';
+
+  // 회원가입
   const signup = async (payload) => {
-    console.log("payload ==> ", payload);
-    loading.value = true
-    error.value = null
+    loading.value = true;
+    error.value = null;
     try {
-      const response = await axios.post('http://127.0.0.1:3000/auth/signup', payload)
-      user.value = response.data
-      return { success: true }
-    } catch (err) {
-      error.value = err.response?.data?.message || '회원가입 중 오류가 발생했습니다.'
-      return { success: false, message: this.error }
-    } finally {
-      loading.value = false
-    }
-  }
+      const response = await axios.post(API_BASE_URL, { 
+        ...payload, 
+        isSignup: true 
+      });
 
-  const login = async (payload) => {
-      loading.value = true
-      try {
-          const response = await axios.post('http://localhost:3000/auth/login', payload)
-          if (response.data.success) {
-              user.value = response.data.user
-              return { success: true }
-          } else {
-              return { success: false, message: response.data.message }
-          }
-      } catch (err) {
-          return { success: false, message: '서버 통신 오류' }
-      } finally {
-          loading.value = false
+      if (response.data.success) {
+        user.value = response.data.data; 
+        return { success: true };
       }
-  }
-
-  const checkPassword = async (payload) => {
-    try {
-      const response = await axios.post('http://localhost:3000/auth/check-password', payload)
-
-      return response.data
-
     } catch (err) {
-      return { success: false, message: '서버 통신 오류' }
+      error.value = err.response?.data?.message || '회원가입 중 오류가 발생했습니다.';
+      return { success: false, message: error.value };
+    } finally {
+      loading.value = false;
     }
-  }  
+  };
 
+  // 로그인
+  const login = async (payload) => {
+    loading.value = true;
+    error.value = null;
+    try {
+      const response = await axios.post(API_BASE_URL, payload);
+      
+      if (response.data.success) {
+        user.value = response.data.data;
+        return { success: true };
+      } else {
+        return { success: false, message: response.data.message };
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || '서버 통신 오류가 발생했습니다.';
+      return { success: false, message: msg };
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  // 인증 상태 확인
+  const checkAuth = async () => {
+    try {
+      const response = await axios.get(API_BASE_URL);
+      
+      if (response.data.success) {
+        user.value = response.data.data.user;
+        return true;
+      } else {
+        user.value = null;
+        return false;
+      }
+    } catch (err) {
+      user.value = null;
+      return false;
+    }
+  };
+
+  // 비밀번호 확인 (마이페이지 진입 등)
   const verifyPassword = async (password) => {
     try {
-      const response = await axios.post('http://localhost:3000/auth/check-password', {
+      const response = await axios.post(`${API_BASE_URL}/verify`, {
         email: user.value.email,
         password
-      })
-
-      return response.data
+      });
+      return response.data;
     } catch (err) {
-      return { success: false, message: '서버 오류' }
+      return { success: false, message: '서버 오류' };
     }
-  }
+  };
 
+  // 비밀번호 변경
   const changePassword = async (newPassword) => {
     try {
-      const response = await axios.post('http://localhost:3000/auth/change-password', {
+      const response = await axios.patch(API_BASE_URL, {
         email: user.value.email,
         newPassword
-      })
-
-      return response.data
+      });
+      return response.data;
     } catch (err) {
-      return { success: false, message: '서버 오류' }
+      return { success: false, message: '서버 오류' };
     }
-  }
+  };
 
-  const checkAuth = async () => {
-  try {
-    const response = await axios.get('http://localhost:3000/auth/me')
-    
-    if (response.data.success) {
-      user.value = response.data.user
-      return true
-    } else {
-      user.value = null
-      return false
-    }
-  } catch (err) {
-    user.value = null
-    return false
-  }
-}
-    
   return {
     user,
     loading,
     error,
     signup,
     login,
-    checkPassword,
     verifyPassword,
     changePassword,
     checkAuth

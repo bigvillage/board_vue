@@ -1,42 +1,44 @@
 import { defineStore } from 'pinia'
-import {ref, computed} from 'vue'
 import axios from 'axios'
 
 export const useUploadStore = defineStore('upload', () => {
-  const uploadDocument = async (formData) => {
-      try {
-        console.log("formData ==> ", formData);
-        const response = await axios.post('http://localhost:3000/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data' // 파일 전송 시 필수 설정
-          }
-        })
-        return response.data
-      } catch (error) {
-        console.error('업로드 스토어 에러:', error)
-        throw error
-      }
-    }
+  const UPLOAD_API = 'http://localhost:3000/api/documents/upload'
 
-  const editDocument = async (id, formData) => {
-    console.log("editDocument 진입")
+  // 문서 업로드
+  const uploadDocument = async (formData) => {
     try {
-      console.log("id ==> ", id)
-      console.log("formData ==> ", formData)
-      await axios.put(`http://localhost:3000/api/update/${id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      // POST /api/documents/upload
+      const response = await axios.post(UPLOAD_API, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       })
+      return response.data
+    } catch (error) {
+      console.error('업로드 스토어 에러:', error)
+      throw error
+    }
+  }
+
+  // 문서 수정
+  const editDocument = async (id, formData) => {
+    try {
+      // PUT /api/documents/upload (기존 /api/update/${id} 에서 변경)
+      // id는 formData에 포함되어 있거나 쿼리로 보냄 (백엔드 설계에 맞춰 qObj에 포함)
+      formData.append('id', id); 
+      const response = await axios.put(UPLOAD_API, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      return response.data
     } catch (error) {
       console.error('수정 에러:', error)
       throw error
     }
   }
 
+  // 문서 삭제
   const deleteDocument = async (id) => {
-    return axios.delete(`http://localhost:3000/api/upload/${id}`)
+    // DELETE /api/documents/upload (id를 바디에 담아 보냄)
+    return axios.delete(UPLOAD_API, { data: { id } })
   }
 
-  return {uploadDocument, editDocument, deleteDocument}
+  return { uploadDocument, editDocument, deleteDocument }
 })

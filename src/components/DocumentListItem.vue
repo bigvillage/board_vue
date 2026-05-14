@@ -76,8 +76,9 @@ const showEditModal = ref(false)
 
 // 다운로드
 const downloadFile = (file) => {
+    console.log(111)
     window.open(
-        `http://localhost:3000/api/download?url=${encodeURIComponent(file.url)}&name=${file.name}`
+        `http://localhost:3000/api/documents/list/download?url=${encodeURIComponent(file.url)}&name=${file.name}`
     )
 }
 
