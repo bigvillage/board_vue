@@ -10,14 +10,11 @@ export const useListStore = defineStore('list', () => {
   // 문서 리스트 조회
   const fetchDocuments = async (page = 1) => {
     try {
-      // 주소 변경 및 쿼리 파라미터 전달
       const response = await axios.get(`${API_URL}?page=${page}&limit=5`, {withCredentials: true})
       
-      // 백엔드 util.writeSuccess 규격에 따라 response.data.data 사용
       const resData = response.data.data || response.data;
       total.value = resData.total
 
-      // 데이터 매핑
       documents.value = resData.documents.map(post => ({
         id: post._id,
         title: post.title,
@@ -43,7 +40,6 @@ export const useListStore = defineStore('list', () => {
   const toggleFavorite = async (id, current) => {
     try {
       const newValue = !current
-      // 백엔드 통합 주소로 PATCH 요청
       await axios.patch('http://localhost:3000/api/documents/upload', { 
         id, 
         isFavorite: newValue 
@@ -63,18 +59,21 @@ export const useListStore = defineStore('list', () => {
 
   // 즐겨찾기 목록 조회 (GET /api/documents/list?isFavorite=true)
   const fetchFavoriteDocuments = async () => {
-    try {
-      const response = await axios.get(`${API_URL}?isFavorite=true`)
-      const resData = response.data.data.documents // 통합 구조 반영
+  try {
+    const response = await axios.get(`${API_URL}?isFavorite=true`, { withCredentials: true });
+    
+    const resData = response.data; 
+    console.log("resData ==> ", resData);
 
-      documents.value = resData.map(post => ({
+    if (resData && resData.documents) {
+      documents.value = resData.documents.map(post => ({
         id: post._id,
         title: post.title,
         author: '익명',
         date: new Date(post.createdAt).toLocaleDateString(),
         type: post.files?.[0]?.type?.split('/')[1]?.toUpperCase() || 'FILE',
         content: post.content,
-        isFavorite: post.isFavorite,
+        isFavorite: post.isFavorite || false, // DB에 값이 없으면 false로 처리
         attachments: post.files?.map(file => ({
           name: file.originalName,
           size: (file.size / 1024).toFixed(1) + 'KB',
@@ -82,18 +81,18 @@ export const useListStore = defineStore('list', () => {
           url: file.fileUrl,
           fileKey: file.fileKey
         })) || []
-      }))
-    } catch (error) {
-      console.error('즐겨찾기 불러오기 에러:', error)
+      }));
     }
+  } catch (error) {
+    console.error('즐겨찾기 불러오기 에러:', error);
   }
+};
 
   // 검색 (POST /api/documents/list)
   const searchDocuments = async (keyword) => {
     try {
-      // 전문 검색은 POST 메서드로 keyword를 보냄
       const response = await axios.post(API_URL, { q: keyword })
-      const resData = response.data.data // 통합 구조 반영
+      const resData = response.data.data
 
       documents.value = resData.map(post => ({
         id: post._id,
