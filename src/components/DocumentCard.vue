@@ -1,28 +1,19 @@
 <template>
   <div class="card" @click="showModal = true">
-
-    <!-- 🔥 헤더 (별 추가) -->
     <div class="card-header">
-
       <img :src="`/src/assets/icons/icon_${document.attachments[0]?.ext?.toLowerCase()}.png`" class="file-icon" />
-
       <h3 class="title">{{ document.title }}</h3>
-
-      <!-- ⭐ 즐겨찾기 (우측 상단) -->
       <el-icon class="favorite-icon" :class="{ active: document.isFavorite }" @click.stop="handleFavoriteClick">
         <component :is="document.isFavorite ? StarFilled : Star" />
       </el-icon>
-
     </div>
 
-    <!-- 내용 -->
     <el-tooltip effect="light" :content="document.content" placement="top" :show-after="300" raw-content>
       <p class="content-preview">
         {{ document.content }}
       </p>
     </el-tooltip>
 
-    <!-- 메타 -->
     <div class="meta">
       <div class="tag-group">
         <span v-for="tag in document.tags" :key="tag" class="tag">
@@ -33,7 +24,6 @@
     </div>
   </div>
 
-  <!-- 상세 모달 -->
   <DocumentDetail v-model="showModal" :document="document" @download="downloadFile" />
 </template>
 
@@ -49,6 +39,10 @@ const props = defineProps({
     default: () => ({
       attachments: []
     })
+  },
+  isFavoritePage: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -56,20 +50,18 @@ const listStore = useListStore()
 
 const showModal = ref(false)
 
-/* ⭐ 즐겨찾기 클릭 */
 const handleFavoriteClick = async () => {
   const newValue = !props.document.isFavorite
 
   await listStore.toggleFavorite(
     props.document.id,
-    props.document.isFavorite
+    props.document.isFavorite,
+    props.isFavoritePage
   )
 
-  // 🔥 UI 즉시 반영
   props.document.isFavorite = newValue
 }
 
-/* 다운로드 */
 const downloadFile = (file) => {
   window.open(
     `http://localhost:3000/api/documents/list/download?url=${encodeURIComponent(file.url)}&name=${file.name}`

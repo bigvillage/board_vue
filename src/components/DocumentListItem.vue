@@ -3,7 +3,6 @@
         <div class="list-item" @click="showModal = true">
             <div class="info-side">
 
-                <!-- ⭐ 추가 -->
                 <el-icon class="favorite-icon" :class="{ active: document.isFavorite }"
                     @click.stop="handleFavoriteClick">
                     <component :is="document.isFavorite ? StarFilled : Star" />
@@ -64,6 +63,10 @@ const props = defineProps({
         default: () => ({
             attachments: []
         })
+    },
+    isFavoritePage: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -130,7 +133,7 @@ const handleCommand = async (command) => {
 
 // 즐겨찾기 체크
 const handleFavoriteClick = () => {
-    listStore.toggleFavorite(props.document.id, props.document.isFavorite)
+    listStore.toggleFavorite(props.document.id, props.document.isFavorite, props.isFavoritePage)
 }
 </script>
 

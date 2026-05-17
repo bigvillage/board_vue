@@ -36,7 +36,6 @@
       </div>
     </div>
 
-    <!-- 검색 + 필터 -->
     <div class="search-section">
       <div class="search-filter-row">
         <SearchBar @search="handleSearch" />
@@ -55,7 +54,6 @@
       </div>
     </div>
 
-    <!-- 리스트 -->
     <div :class="viewMode === 'grid' ? 'document-grid' : 'document-list'">
       <template v-if="viewMode === 'grid'">
         <DocumentCard v-for="doc in sortedDocuments" :key="'grid-' + doc.id" :document="doc" />
@@ -66,10 +64,11 @@
       </template>
     </div>
 
-    <!-- 페이지네이션 -->
-    <Pagination :total="total" :page-size="pageSize" :current-page="currentPage" @change="changePage" />
+    <div class="flex-spacer"></div>
 
-    <!-- 빈 상태 -->
+    <Pagination v-if="total > 0" :total="total" :page-size="pageSize" :current-page="currentPage"
+      @change="changePage" />
+
     <div v-if="documents.length === 0" class="empty-state">
       <el-empty description="검색된 문서가 없습니다." />
     </div>
@@ -98,7 +97,7 @@ const sortKey = ref('date')
 const sortOrder = ref('desc')
 
 const currentPage = ref(1)
-const pageSize = 5
+const pageSize = 10
 
 // 검색
 const handleSearch = async (keyword) => {
@@ -130,21 +129,23 @@ const sortedDocuments = computed(() => {
 // 페이지 변경
 const changePage = async (page) => {
   currentPage.value = page
-  await listStore.fetchDocuments(page)
+  await listStore.fetchDocuments(page, pageSize)
 }
 
 onMounted(async () => {
-  await listStore.fetchDocuments(1)
+  await listStore.fetchDocuments(1, pageSize)
 })
 </script>
 
 <style scoped>
 .page-container {
   width: 100%;
-  min-height: 100vh;
+  min-height: calc(100vh - 60px);
   padding: 30px 40px;
   box-sizing: border-box;
   background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
 }
 
 .header-section {
@@ -238,5 +239,12 @@ onMounted(async () => {
   .filter-box {
     width: 100%;
   }
+}
+
+.flex-spacer {
+  flex: 1;
+  /* 데이터가 1개든 2개든 남는 중간 공간을 이 녀석이 투명하게 다 늘어나서 채워줍니다. */
+  min-height: 20px;
+  /* 리스트와 페이징 사이의 최소 보장 간격 */
 }
 </style>

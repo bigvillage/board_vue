@@ -8,9 +8,9 @@ export const useListStore = defineStore('list', () => {
   const API_URL = 'http://localhost:3000/api/documents/list'
 
   // 문서 리스트 조회
-  const fetchDocuments = async (page = 1) => {
+  const fetchDocuments = async (page = 1, pageSize) => {
     try {
-      const response = await axios.get(`${API_URL}?page=${page}&limit=5`, {withCredentials: true})
+      const response = await axios.get(`${API_URL}?page=${page}&limit=${pageSize}`, {withCredentials: true})
       
       const resData = response.data.data || response.data;
       total.value = resData.total
@@ -37,7 +37,7 @@ export const useListStore = defineStore('list', () => {
   }
 
   // 즐겨찾기 토글 (이제 PATCH /api/documents/upload 사용)
-  const toggleFavorite = async (id, current) => {
+  const toggleFavorite = async (id, current, isFavoritePage = false) => {
     try {
       const newValue = !current
       await axios.patch('http://localhost:3000/api/documents/upload', { 
@@ -45,13 +45,18 @@ export const useListStore = defineStore('list', () => {
         isFavorite: newValue 
       })
 
+      // 1. 일단 현재 화면 데이터의 별 상태를 토글해줍니다. (UI 반영)
       const target = documents.value.find(doc => doc.id === id)
       if (target) target.isFavorite = newValue
       
-      // 즐겨찾기 해제 시 목록에서 제거 로직 유지
-      if (!newValue) {
+      // 2. [수정 핵심] 즐겨찾기 페이지에서 '해제'할 때만 목록에서 즉시 제거합니다.
+      if (isFavoritePage && !newValue) {
         documents.value = documents.value.filter(doc => doc.id !== id)
       }
+      
+      // 일반 리스트 페이지일 때는 위 if문에 안 걸리므로, 
+      // 1번에서 target.isFavorite 값만 바뀌고 리스트에 그대로 유지됩니다.
+
     } catch (e) {
       console.error('즐겨찾기 변경 실패:', e)
     }

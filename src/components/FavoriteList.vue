@@ -1,6 +1,5 @@
 <template>
     <div class="page-container">
-        <!-- 🔥 헤더 (DocumentList와 동일) -->
         <div class="header-section">
             <div class="title-group">
                 <h1>즐겨찾기</h1>
@@ -34,11 +33,13 @@
 
         <div :class="viewMode === 'grid' ? 'document-grid' : 'document-list'">
             <template v-if="viewMode === 'grid'">
-                <DocumentCard v-for="doc in documents" :key="'grid-' + doc.id" :document="doc" />
+                <DocumentCard v-for="doc in documents" :key="'grid-' + doc.id" :document="doc"
+                    is-favorite-page="true" />
             </template>
 
             <template v-else>
-                <DocumentListItem v-for="doc in documents" :key="'list-' + doc.id" :document="doc" />
+                <DocumentListItem v-for="doc in documents" :key="'list-' + doc.id" :document="doc"
+                    is-favorite-page="true" />
             </template>
         </div>
 
@@ -57,22 +58,17 @@ import { Grid, List, Plus } from '@element-plus/icons-vue'
 import DocumentCard from '@/components/DocumentCard.vue'
 import DocumentListItem from '@/components/DocumentListItem.vue'
 
-// 뷰 모드
 const viewMode = ref('grid')
 
-// store
 const listStore = useListStore()
 const { documents } = storeToRefs(listStore)
 
-// ⭐ 핵심
 onMounted(() => {
     listStore.fetchFavoriteDocuments()
 })
 </script>
 
 <style scoped>
-/* DocumentList.vue랑 100% 동일하게 복붙 */
-
 .page-container {
     width: 100%;
     min-height: 100vh;

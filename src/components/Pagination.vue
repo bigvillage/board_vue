@@ -22,6 +22,7 @@ const changePage = (page) => {
 <style scoped>
 .pagination-wrapper {
     margin-top: 40px;
+    padding-bottom: 20px;
     display: flex;
     justify-content: center;
 }
