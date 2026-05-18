@@ -2,26 +2,36 @@
     <div class="mypage-container">
         <h1 class="title">마이페이지</h1>
 
-        <!-- 1단계: 비밀번호 확인 -->
-        <el-card v-if="!verified" class="card">
+        <!-- 사용자 정보 -->
+        <el-card class="card">
             <template #header>
-                <span>비밀번호 확인</span>
+                <span>계정 정보</span>
             </template>
 
-            <el-input v-model="password" type="password" placeholder="현재 비밀번호 입력" show-password />
+            <div class="user-info">
+                <p><strong>이메일:</strong> {{ authStore.user?.email }}</p>
+                <p><strong>이름:</strong> {{ authStore.user?.name }}</p>
+                <p class="pw-info">
+                    비밀번호 마지막 변경: {{ passwordAgeText }}
+                </p>
+            </div>
 
-            <el-button type="primary" class="btn" @click="verifyPassword">
-                확인
+            <el-button type="primary" @click="showChangeForm = !showChangeForm">
+                비밀번호 변경
             </el-button>
         </el-card>
 
-        <!-- 2단계: 비밀번호 변경 -->
-        <el-card v-else class="card">
+        <!-- 비밀번호 변경 -->
+        <el-card v-if="showChangeForm" class="card">
             <template #header>
                 <span>비밀번호 변경</span>
             </template>
 
             <el-form label-width="120px">
+                <el-form-item label="현재 비밀번호">
+                    <el-input v-model="currentPassword" type="password" show-password />
+                </el-form-item>
+
                 <el-form-item label="새 비밀번호">
                     <el-input v-model="newPassword" type="password" show-password />
                 </el-form-item>
@@ -41,35 +51,50 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 
-// 상태
-const password = ref('')
-const verified = ref(false)
+const showChangeForm = ref(false)
 
+const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
 
-// 1. 비밀번호 확인
-const verifyPassword = async () => {
-    const result = await authStore.verifyPassword(password.value)
+const passwordChangedAt = ref(localStorage.getItem('pw_changed_at') || Date.now())
 
-    if (result.success) {
-        verified.value = true
-        ElMessage.success('확인되었습니다')
-    } else {
-        ElMessage.error(result.message)
+// 날짜 계산
+const passwordAgeText = computed(() => {
+    const diff = Date.now() - passwordChangedAt.value
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    return `${days}일 전`
+})
+
+onMounted(async () => {
+    const result = await authStore.fetchMe()
+
+    if (!result.success) {
+        ElMessage.error('로그인이 필요합니다')
+        window.location.href = '/login'
     }
-}
+})
 
-// 2. 비밀번호 변경
+// 비밀번호 변경
 const changePassword = async () => {
+    if (!currentPassword.value) {
+        return ElMessage.warning('현재 비밀번호 입력하세요')
+    }
+
+    const verify = await authStore.verifyPassword(currentPassword.value)
+
+    if (!verify.success) {
+        return ElMessage.error('현재 비밀번호가 틀렸습니다')
+    }
+
     if (!newPassword.value || !confirmPassword.value) {
-        return ElMessage.warning('비밀번호를 입력하세요')
+        return ElMessage.warning('새 비밀번호 입력하세요')
     }
 
     if (newPassword.value !== confirmPassword.value) {
@@ -79,9 +104,14 @@ const changePassword = async () => {
     const result = await authStore.changePassword(newPassword.value)
 
     if (result.success) {
-        ElMessage.success('비밀번호가 변경되었습니다')
-        verified.value = false
-        password.value = ''
+        ElMessage.success('비밀번호 변경 완료')
+
+        // 변경일 저장 (임시)
+        passwordChangedAt.value = Date.now()
+        localStorage.setItem('pw_changed_at', passwordChangedAt.value)
+
+        showChangeForm.value = false
+        currentPassword.value = ''
         newPassword.value = ''
         confirmPassword.value = ''
     } else {
@@ -108,8 +138,12 @@ const changePassword = async () => {
     border-radius: 12px;
 }
 
-.btn {
-    margin-top: 15px;
-    width: 100%;
+.user-info p {
+    margin: 5px 0;
+}
+
+.pw-info {
+    font-size: 12px;
+    color: gray;
 }
 </style>

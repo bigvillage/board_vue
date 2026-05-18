@@ -22,10 +22,9 @@ export const useAuthStore = defineStore('auth', () => {
         ...payload, 
         isSignup: true 
       });
-
-      if (response.data.success) {
+      if (response.data.result) {
         user.value = response.data.data; 
-        return { success: true };
+        return { result: true };
       }
     } catch (err) {
       error.value = err.response?.data?.message || '회원가입 중 오류가 발생했습니다.';
@@ -42,7 +41,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await axios.post(API_BASE_URL, payload);
       
-      if (response.data.success) {
+      if (response.data.result) {
         user.value = response.data.data;
         return { success: true };
       } else {
@@ -56,12 +55,24 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  // 로그아웃
+  const logout = async () => {
+    try {
+      await axios.post(API_BASE_URL, { isLogout: true });
+    } catch (err) {
+      console.error('서버 로그아웃 처리 중 오류 발생:', err);
+    } finally {
+      user.value = null;
+      error.value = null;
+    }
+  };
+
   // 인증 상태 확인
   const checkAuth = async () => {
     try {
       const response = await axios.get(API_BASE_URL);
       
-      if (response.data.success) {
+      if (response.data.result) {
         user.value = response.data.data.user;
         return true;
       } else {
@@ -83,7 +94,7 @@ export const useAuthStore = defineStore('auth', () => {
       });
       return response.data;
     } catch (err) {
-      return { success: false, message: '서버 오류' };
+      return { result: false, message: '서버 오류' };
     }
   };
 
@@ -96,7 +107,7 @@ export const useAuthStore = defineStore('auth', () => {
       });
       return response.data;
     } catch (err) {
-      return { success: false, message: '서버 오류' };
+      return { result: false, message: '서버 오류' };
     }
   };
 
@@ -106,6 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     signup,
     login,
+    logout,
     verifyPassword,
     changePassword,
     checkAuth

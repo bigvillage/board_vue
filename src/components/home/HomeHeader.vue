@@ -8,7 +8,7 @@
                     <button @click="router.push('/mypage')" class="nav-link">마이페이지</button>
                     <button @click="router.push('/settings')" class="nav-link">설정</button>
 
-                    <div class="divider"></div> <span class="user-info"><b>123</b> 님</span>
+                    <div class="divider"></div> <span class="user-info"><b>{{ authStore.user?.name }}</b> 님</span>
                     <button @click="handleLogout" class="logout-btn">로그아웃</button>
                 </div>
             </template>
@@ -24,13 +24,17 @@
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import SearchBar from '../SearchBar.vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const handleLogout = () => {
-    authStore.logout() // 스토어의 로그아웃 액션 호출 (추천)
-    alert('로그아웃 되었습니다.')
+const handleLogout = async () => {
+    await authStore.logout()
+
+    ElMessage.success('로그아웃 되었습니다.')
+
+    // 2. 로그인 페이지로 강제 이동
     router.push('/login')
 }
 </script>
